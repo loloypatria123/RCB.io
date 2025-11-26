@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection rules
+    match /users/{userId} {
+      // Allow create during sign up (initial user creation)
+      allow create: if request.auth != null && 
+        request.auth.uid == userId;
+      
+      // Allow read if user is authenticated and is the owner
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow update if user is authenticated and is the owner
+      allow update: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow delete if user is authenticated and is the owner
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Admins collection rules
+    match /admins/{adminId} {
+      // Allow create during sign up (initial admin creation)
+      allow create: if request.auth != null && 
+        request.auth.uid == adminId;
+      
+      // Allow read if user is authenticated and is the owner
+      allow read: if request.auth != null && request.auth.uid == adminId;
+      
+      // Allow update if user is authenticated and is the owner
+      allow update: if request.auth != null && request.auth.uid == adminId;
+      
+      // Allow delete if user is authenticated and is the owner
+      allow delete: if request.auth != null && request.auth.uid == adminId;
+    }
+    
+    // Default deny for all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -26,7 +26,6 @@ class _UserDashboardState extends State<UserDashboard> {
     UserPage(icon: Icons.home, label: 'Dashboard'),
     UserPage(icon: Icons.smart_toy, label: 'Robot Control'),
     UserPage(icon: Icons.monitor_heart, label: 'Live Monitoring'),
-    UserPage(icon: Icons.notifications, label: 'Notifications'),
     UserPage(icon: Icons.history, label: 'History'),
     UserPage(icon: Icons.bug_report, label: 'Report Issue'),
     UserPage(icon: Icons.settings, label: 'Settings'),
@@ -57,7 +56,9 @@ class _UserDashboardState extends State<UserDashboard> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               Navigator.of(context).pushReplacementNamed('/admin-dashboard');
             });
-            return const SizedBox();
+            return const Center(
+              child: CircularProgressIndicator(color: _accentPrimary),
+            );
           }
 
           return Column(
@@ -108,9 +109,84 @@ class _UserDashboardState extends State<UserDashboard> {
             ),
             Row(
               children: [
-                IconButton(
+                PopupMenuButton<String>(
                   icon: const Icon(Icons.notifications, color: _accentPrimary),
-                  onPressed: () => setState(() => _currentPage = 3),
+                  onSelected: (value) {
+                    if (value == 'view_all') {
+                      _showNotificationsDialog();
+                    }
+                  },
+                  itemBuilder: (BuildContext context) => [
+                    PopupMenuItem<String>(
+                      value: 'view_all',
+                      child: Container(
+                        width: 300,
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Notifications & Alerts',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: _textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildNotificationCard(
+                              'Cleaning Completed',
+                              'ROBOT-001 finished cleaning Classroom A',
+                              'Just now',
+                              _successColor,
+                              Icons.check_circle,
+                            ),
+                            const SizedBox(height: 10),
+                            _buildNotificationCard(
+                              'Trash Container Full',
+                              'ROBOT-002 trash at 95% capacity',
+                              '15 min ago',
+                              _warningColor,
+                              Icons.delete_sweep,
+                            ),
+                            const SizedBox(height: 10),
+                            _buildNotificationCard(
+                              'Robot is Stuck',
+                              'ROBOT-001 detected stuck on carpet in Hallway',
+                              '1 hour ago',
+                              _errorColor,
+                              Icons.warning,
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _showNotificationsDialog();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: _accentPrimary,
+                                  foregroundColor: Colors.black,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                ),
+                                child: Text(
+                                  'View All Notifications',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 IconButton(
                   icon: const Icon(Icons.logout, color: _errorColor),
@@ -133,12 +209,10 @@ class _UserDashboardState extends State<UserDashboard> {
       case 2:
         return _buildLiveMonitoringPage();
       case 3:
-        return _buildNotificationsPage();
-      case 4:
         return _buildCleaningHistoryPage();
-      case 5:
+      case 4:
         return _buildIssueReportingPage();
-      case 6:
+      case 5:
         return _buildProfilePage();
       default:
         return _buildDashboardPage();
@@ -282,7 +356,7 @@ class _UserDashboardState extends State<UserDashboard> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Color(0xFF0A0E1A),
+              color: const Color(0xFF0A0E1A),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -1328,177 +1402,6 @@ class _UserDashboardState extends State<UserDashboard> {
     );
   }
 
-  Widget _buildNotificationsPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Notifications & Alerts',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: _textPrimary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Stay updated with your robot activities',
-            style: GoogleFonts.poppins(fontSize: 11, color: _textSecondary),
-          ),
-          const SizedBox(height: 20),
-          // Filter Tabs
-          _buildNotificationFilterTabs(),
-          const SizedBox(height: 20),
-          // Success Notifications
-          Text(
-            'Success',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            'Cleaning Completed',
-            'ROBOT-001 finished cleaning Classroom A',
-            'Just now',
-            _successColor,
-            Icons.check_circle,
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            'Disposal Completed',
-            'Trash disposed successfully at 2:30 PM',
-            '5 min ago',
-            _successColor,
-            Icons.delete_sweep,
-          ),
-          const SizedBox(height: 20),
-          // Warning Notifications
-          Text(
-            'Warnings',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            'Trash Container Full',
-            'ROBOT-002 trash at 95% capacity',
-            '15 min ago',
-            _warningColor,
-            Icons.delete_sweep,
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            'Low Battery',
-            'ROBOT-003 battery at 20%, returning to base',
-            '32 min ago',
-            _warningColor,
-            Icons.battery_alert,
-          ),
-          const SizedBox(height: 20),
-          // Error Notifications
-          Text(
-            'Errors',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            'Robot is Stuck',
-            'ROBOT-001 detected stuck on carpet in Hallway',
-            '1 hour ago',
-            _errorColor,
-            Icons.warning,
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            'Robot Disconnected',
-            'ROBOT-002 lost connection - last seen 2 hours ago',
-            '2 hours ago',
-            _errorColor,
-            Icons.cloud_off,
-          ),
-          const SizedBox(height: 20),
-          // Info Notifications
-          Text(
-            'Information',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            'New Schedule Added',
-            'Daily cleaning scheduled for Library at 10:00 AM',
-            '3 hours ago',
-            _accentPrimary,
-            Icons.schedule,
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            'Admin Announcement',
-            'System maintenance scheduled for tomorrow at 2:00 AM',
-            '5 hours ago',
-            _accentSecondary,
-            Icons.notifications,
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationFilterTabs() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          _buildFilterTab('All', true),
-          const SizedBox(width: 8),
-          _buildFilterTab('Success', false),
-          const SizedBox(width: 8),
-          _buildFilterTab('Warnings', false),
-          const SizedBox(width: 8),
-          _buildFilterTab('Errors', false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterTab(String label, bool isActive) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: isActive ? _accentPrimary.withOpacity(0.2) : _cardBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isActive ? _accentPrimary : _textSecondary.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.poppins(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: isActive ? _accentPrimary : _textSecondary,
-        ),
-      ),
-    );
-  }
-
   Widget _buildNotificationCard(
     String title,
     String message,
@@ -2243,7 +2146,7 @@ class _UserDashboardState extends State<UserDashboard> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: Color(0xFF0A0E1A),
+              color: const Color(0xFF0A0E1A),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _accentPrimary.withOpacity(0.2)),
             ),
@@ -2287,7 +2190,7 @@ class _UserDashboardState extends State<UserDashboard> {
                   color: _textSecondary,
                 ),
                 filled: true,
-                fillColor: Color(0xFF0A0E1A),
+                fillColor: const Color(0xFF0A0E1A),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.all(12),
               ),
@@ -2763,7 +2666,7 @@ class _UserDashboardState extends State<UserDashboard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
-                      color: Color(0xFF0A0E1A).withOpacity(0.5),
+                      color: const Color(0xFF0A0E1A).withOpacity(0.5),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: _textSecondary.withOpacity(0.3),
@@ -3065,51 +2968,121 @@ class _UserDashboardState extends State<UserDashboard> {
 
   Widget _buildBottomNavigation() {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: _cardBg,
-        border: Border(top: BorderSide(color: _accentPrimary.withOpacity(0.2))),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _accentPrimary.withOpacity(0.3), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: _accentPrimary.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: List.generate(_pages.length, (index) {
-            final isSelected = _currentPage == index;
-            return GestureDetector(
-              onTap: () => setState(() => _currentPage = index),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  border: isSelected
-                      ? Border(top: BorderSide(color: _accentPrimary, width: 3))
-                      : null,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _pages[index].icon,
-                      color: isSelected ? _accentPrimary : _textSecondary,
-                      size: 18,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            children: List.generate(_pages.length, (index) {
+              final isSelected = _currentPage == index;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _currentPage = index),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 2,
+                      vertical: 6,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      _pages[index].label,
-                      style: GoogleFonts.poppins(
-                        fontSize: 8,
-                        color: isSelected ? _accentPrimary : _textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? _accentPrimary.withOpacity(0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: isSelected
+                          ? Border.all(
+                              color: _accentPrimary.withOpacity(0.4),
+                              width: 1,
+                            )
+                          : null,
+                      gradient: isSelected
+                          ? LinearGradient(
+                              colors: [
+                                _accentPrimary.withOpacity(0.1),
+                                _accentPrimary.withOpacity(0.05),
+                              ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            )
+                          : null,
                     ),
-                  ],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Animated Icon Container
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? _accentPrimary.withOpacity(0.2)
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                            border: isSelected
+                                ? Border.all(color: _accentPrimary, width: 2)
+                                : null,
+                          ),
+                          child: Icon(
+                            _pages[index].icon,
+                            color: isSelected ? _accentPrimary : _textSecondary,
+                            size: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Label with smooth animation
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? _accentPrimary.withOpacity(0.2)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _pages[index].label,
+                            style: GoogleFonts.poppins(
+                              fontSize: 9,
+                              color: isSelected
+                                  ? _accentPrimary
+                                  : _textSecondary,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              letterSpacing: isSelected ? 0.5 : 0.0,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         ),
       ),
     );
@@ -3151,7 +3124,7 @@ class _UserDashboardState extends State<UserDashboard> {
                     fontSize: 10,
                   ),
                   filled: true,
-                  fillColor: Color(0xFF0A0E1A),
+                  fillColor: const Color(0xFF0A0E1A),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -3244,7 +3217,7 @@ class _UserDashboardState extends State<UserDashboard> {
                 ),
               ),
               GestureDetector(
-                onTap: () => setState(() => _currentPage = 3),
+                onTap: () => _showNotificationsDialog(),
                 child: Text(
                   'View All',
                   style: GoogleFonts.poppins(
@@ -3361,7 +3334,7 @@ class _UserDashboardState extends State<UserDashboard> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Color(0xFF0A0E1A),
+              color: const Color(0xFF0A0E1A),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -3460,6 +3433,158 @@ class _UserDashboardState extends State<UserDashboard> {
     );
   }
 
+  void _showNotificationsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: _cardBg,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: _accentPrimary.withOpacity(0.2)),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Notifications & Alerts',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: _textSecondary),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Success',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildNotificationCard(
+                        'Cleaning Completed',
+                        'ROBOT-001 finished cleaning Classroom A',
+                        'Just now',
+                        _successColor,
+                        Icons.check_circle,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildNotificationCard(
+                        'Disposal Completed',
+                        'Trash disposed successfully at 2:30 PM',
+                        '5 min ago',
+                        _successColor,
+                        Icons.delete_sweep,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Warnings',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildNotificationCard(
+                        'Trash Container Full',
+                        'ROBOT-002 trash at 95% capacity',
+                        '15 min ago',
+                        _warningColor,
+                        Icons.delete_sweep,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildNotificationCard(
+                        'Low Battery',
+                        'ROBOT-003 battery at 20%, returning to base',
+                        '32 min ago',
+                        _warningColor,
+                        Icons.battery_alert,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Errors',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildNotificationCard(
+                        'Robot is Stuck',
+                        'ROBOT-001 detected stuck on carpet in Hallway',
+                        '1 hour ago',
+                        _errorColor,
+                        Icons.warning,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildNotificationCard(
+                        'Robot Disconnected',
+                        'ROBOT-002 lost connection - last seen 2 hours ago',
+                        '2 hours ago',
+                        _errorColor,
+                        Icons.cloud_off,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Information',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildNotificationCard(
+                        'New Schedule Added',
+                        'Daily cleaning scheduled for Library at 10:00 AM',
+                        '3 hours ago',
+                        _accentPrimary,
+                        Icons.schedule,
+                      ),
+                      const SizedBox(height: 10),
+                      _buildNotificationCard(
+                        'Admin Announcement',
+                        'System maintenance scheduled for tomorrow at 2:00 AM',
+                        '5 hours ago',
+                        _accentSecondary,
+                        Icons.notifications,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _logout() {
     showDialog(
       context: context,
@@ -3488,8 +3613,9 @@ class _UserDashboardState extends State<UserDashboard> {
             onPressed: () async {
               Navigator.pop(context);
               await context.read<AuthProvider>().signOut();
-              if (mounted)
+              if (mounted) {
                 Navigator.of(context).pushReplacementNamed('/sign-in');
+              }
             },
             child: Text(
               'Logout',

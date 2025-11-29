@@ -39,66 +39,7 @@ class ReportData {
 }
 
 class _AdminReportsState extends State<AdminReports> {
-  final List<ReportData> reports = [
-    ReportData(
-      id: 'RPT001',
-      title: 'Robot Not Responding',
-      category: 'bug',
-      status: 'Open',
-      submittedBy: 'john@example.com',
-      submittedDate: '2025-11-26 14:30',
-      description: 'ROBOT-001 is not responding to commands. LED is off.',
-      replies: [
-        'Checked power supply - working fine',
-        'Restarted robot successfully',
-      ],
-    ),
-    ReportData(
-      id: 'RPT002',
-      title: 'UI Improvement Suggestion',
-      category: 'feedback',
-      status: 'Open',
-      submittedBy: 'jane@example.com',
-      submittedDate: '2025-11-26 13:15',
-      description:
-          'Dashboard could benefit from dark mode toggle for better accessibility.',
-      replies: [],
-    ),
-    ReportData(
-      id: 'RPT003',
-      title: 'Cleaning Schedule Not Working',
-      category: 'bug',
-      status: 'Open',
-      submittedBy: 'bob@example.com',
-      submittedDate: '2025-11-26 12:00',
-      description: 'Weekly schedule is not triggering on the specified days.',
-      resolved: true,
-      replies: ['Updated scheduling logic', 'Issue resolved in v2.1.6'],
-    ),
-    ReportData(
-      id: 'RPT004',
-      title: 'Feature Request: Export Data',
-      category: 'feature_request',
-      status: 'Open',
-      submittedBy: 'alice@example.com',
-      submittedDate: '2025-11-25 10:45',
-      description:
-          'Would like ability to export cleaning logs as PDF for reports.',
-      replies: ['Added to roadmap for Q1 2026'],
-    ),
-    ReportData(
-      id: 'RPT005',
-      title: 'Battery Indicator Inaccurate',
-      category: 'bug',
-      status: 'Open',
-      submittedBy: 'charlie@example.com',
-      submittedDate: '2025-11-24 16:20',
-      description: 'Robot battery shows 50% but dies within 10 minutes.',
-      resolved: true,
-      archived: true,
-      replies: ['Calibrated battery sensor', 'Resolved and deployed'],
-    ),
-  ];
+  final List<ReportData> reports = [];
 
   String _selectedCategory = 'All';
   String _selectedStatus = 'All';

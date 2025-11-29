@@ -11,6 +11,7 @@ import 'pages/firestore_debug_page.dart';
 import 'pages/admin_recovery_page.dart';
 import 'pages/admin_main_layout.dart';
 import 'pages/admin_mobile_dashboard.dart';
+import 'pages/user_settings_page.dart';
 import 'providers/auth_provider.dart';
 import 'providers/ui_provider.dart';
 
@@ -65,6 +66,7 @@ class MyApp extends StatelessWidget {
               email: args?['email'] ?? '',
             );
           },
+          '/UserSettingsPage': (context) => const UserSettingsPage(),
         },
       ),
     );

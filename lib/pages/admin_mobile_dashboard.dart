@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// Professional Robotics Color Palette
-const Color _bgPrimary = Color(0xFF0A0E1A);
-const Color _cardBg = Color(0xFF131820);
-const Color _accentPrimary = Color(0xFF00D9FF);
-const Color _accentSecondary = Color(0xFF1E90FF);
-const Color _warningColor = Color(0xFFFF6B35);
-const Color _errorColor = Color(0xFFFF3333);
-const Color _successColor = Color(0xFF00FF88);
-const Color _textPrimary = Color(0xFFE8E8E8);
-const Color _textSecondary = Color(0xFF8A8A8A);
+// Professional palette aligned with user dashboard & auth pages
+const Color _bgPrimary = Color(0xFF0A0E27);
+const Color _cardBg = Color(0xFF111827);
+
+const Color _accentPrimary = Color(0xFF4F46E5); // Indigo
+const Color _accentSecondary = Color(0xFF06B6D4); // Cyan
+
+const Color _warningColor = Color(0xFFF59E0B);
+const Color _errorColor = Color(0xFFEF4444);
+const Color _successColor = Color(0xFF10B981);
+
+const Color _textPrimary = Color(0xFFF9FAFB);
+const Color _textSecondary = Color(0xFFD1D5DB);
 
 class AdminMobileDashboard extends StatefulWidget {
   const AdminMobileDashboard({super.key});

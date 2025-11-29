@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/cleaning_schedule_model.dart';
+import '../models/audit_log_model.dart';
+import '../services/schedule_service.dart';
+import 'admin_schedule_creation_dialog.dart';
 
-// Professional Robotics Color Palette
-const Color _cardBg = Color(0xFF131820);
-const Color _accentPrimary = Color(0xFF00D9FF);
-const Color _accentSecondary = Color(0xFF1E90FF);
-const Color _accentTertiary = Color(0xFF00FF88);
-const Color _warningColor = Color(0xFFFF6B35);
-const Color _successColor = Color(0xFF00FF88);
-const Color _textPrimary = Color(0xFFE8E8E8);
-const Color _textSecondary = Color(0xFF8A8A8A);
+// Professional palette aligned with user dashboard & auth pages
+const Color _cardBg = Color(0xFF111827);
+
+const Color _accentPrimary = Color(0xFF4F46E5); // Indigo
+const Color _accentSecondary = Color(0xFF06B6D4); // Cyan
+const Color _accentTertiary = Color(0xFF10B981); // Success green
+
+const Color _warningColor = Color(0xFFF59E0B);
+const Color _successColor = Color(0xFF10B981);
+
+const Color _textPrimary = Color(0xFFF9FAFB);
+const Color _textSecondary = Color(0xFFD1D5DB);
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -19,6 +26,23 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
+  late Stream<List<CleaningSchedule>> _todaySchedulesStream;
+  late Stream<List<AuditLog>> _auditLogsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _todaySchedulesStream = ScheduleService.streamTodaySchedules();
+    _auditLogsStream = ScheduleService.streamAuditLogs(limit: 10);
+  }
+
+  void _showCreateScheduleDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const AdminScheduleCreationDialog(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -93,61 +117,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
               width: 1,
             ),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: const BoxDecoration(
-                  color: _successColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Status: IDLE',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: _textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Last Activity: 2 minutes ago',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: _textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: _successColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _successColor, width: 1),
-                ),
-                child: Text(
-                  'READY',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: _successColor,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
-            ],
+          child: Center(
+            child: Text(
+              'No robot data available',
+              style: GoogleFonts.poppins(fontSize: 14, color: _textSecondary),
+            ),
           ),
         ),
       ],
@@ -379,55 +353,125 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _cardBg,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _accentPrimary.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              _buildScheduleItem(
-                time: '08:00 AM',
-                task: 'Living Room Cleaning',
-                status: 'Completed',
-                statusColor: _successColor,
+        StreamBuilder<List<CleaningSchedule>>(
+          stream: _todaySchedulesStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _accentPrimary.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(_accentPrimary),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _warningColor.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      'Error loading schedules',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: _warningColor,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final schedules = snapshot.data ?? [];
+
+            if (schedules.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _accentPrimary.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      'No cleaning schedule for today',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _accentPrimary.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
-              const Divider(color: Color(0xFF2A3040), height: 16),
-              _buildScheduleItem(
-                time: '10:30 AM',
-                task: 'Bedroom Cleaning',
-                status: 'In Progress',
-                statusColor: _accentPrimary,
+              child: Column(
+                children: [
+                  for (int i = 0; i < schedules.length; i++) ...[
+                    _buildScheduleItemWidget(schedules[i]),
+                    if (i < schedules.length - 1)
+                      const Divider(color: Color(0xFF2A3040), height: 16),
+                  ],
+                ],
               ),
-              const Divider(color: Color(0xFF2A3040), height: 16),
-              _buildScheduleItem(
-                time: '01:00 PM',
-                task: 'Kitchen Cleaning',
-                status: 'Scheduled',
-                statusColor: _textSecondary,
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildScheduleItem({
-    required String time,
-    required String task,
-    required String status,
-    required Color statusColor,
-  }) {
+  Widget _buildScheduleItemWidget(CleaningSchedule schedule) {
+    final statusColor = _getStatusColor(schedule.status);
+    final timeStr =
+        '${schedule.scheduledTime.hour.toString().padLeft(2, '0')}:${schedule.scheduledTime.minute.toString().padLeft(2, '0')}';
+
     return Row(
       children: [
         Text(
-          time,
+          timeStr,
           style: GoogleFonts.poppins(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -436,13 +480,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: Text(
-            task,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: _textPrimary,
-              fontWeight: FontWeight.w500,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                schedule.title,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: _textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (schedule.description.isNotEmpty)
+                Text(
+                  schedule.description,
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: _textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
           ),
         ),
         Container(
@@ -453,7 +512,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             border: Border.all(color: statusColor, width: 0.5),
           ),
           child: Text(
-            status,
+            _getStatusText(schedule.status),
             style: GoogleFonts.poppins(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -463,6 +522,32 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ],
     );
+  }
+
+  Color _getStatusColor(ScheduleStatus status) {
+    switch (status) {
+      case ScheduleStatus.completed:
+        return _successColor;
+      case ScheduleStatus.inProgress:
+        return _accentPrimary;
+      case ScheduleStatus.cancelled:
+        return _warningColor;
+      case ScheduleStatus.scheduled:
+        return _textSecondary;
+    }
+  }
+
+  String _getStatusText(ScheduleStatus status) {
+    switch (status) {
+      case ScheduleStatus.completed:
+        return 'Completed';
+      case ScheduleStatus.inProgress:
+        return 'In Progress';
+      case ScheduleStatus.cancelled:
+        return 'Cancelled';
+      case ScheduleStatus.scheduled:
+        return 'Scheduled';
+    }
   }
 
   Widget _buildAlertsSection() {
@@ -546,77 +631,159 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
         ),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _cardBg,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _accentPrimary.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              _buildLogEntry(
-                time: '14:32',
-                event: 'Cleaning session completed',
-                type: 'success',
+        StreamBuilder<List<AuditLog>>(
+          stream: _auditLogsStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _accentPrimary.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(_accentPrimary),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _warningColor.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      'Error loading logs',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: _warningColor,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final logs = snapshot.data ?? [];
+
+            if (logs.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _accentPrimary.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      'No activity logs available',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _accentPrimary.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
-              const Divider(color: Color(0xFF2A3040), height: 16),
-              _buildLogEntry(
-                time: '13:15',
-                event: 'Battery charging started',
-                type: 'info',
+              child: Column(
+                children: [
+                  for (int i = 0; i < logs.length; i++) ...[
+                    _buildLogItemWidget(logs[i]),
+                    if (i < logs.length - 1)
+                      const Divider(color: Color(0xFF2A3040), height: 16),
+                  ],
+                ],
               ),
-              const Divider(color: Color(0xFF2A3040), height: 16),
-              _buildLogEntry(
-                time: '12:00',
-                event: 'WiFi connection established',
-                type: 'success',
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ],
     );
   }
 
-  Widget _buildLogEntry({
-    required String time,
-    required String event,
-    required String type,
-  }) {
-    final color = type == 'success'
-        ? _successColor
-        : type == 'warning'
-        ? _warningColor
-        : _accentPrimary;
+  Widget _buildLogItemWidget(AuditLog log) {
+    final timeStr =
+        '${log.timestamp.hour.toString().padLeft(2, '0')}:${log.timestamp.minute.toString().padLeft(2, '0')}';
+    final dateStr =
+        '${log.timestamp.year}-${log.timestamp.month.toString().padLeft(2, '0')}-${log.timestamp.day.toString().padLeft(2, '0')}';
 
     return Row(
       children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              timeStr,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _accentPrimary,
+              ),
+            ),
+            Text(
+              dateStr,
+              style: GoogleFonts.poppins(fontSize: 10, color: _textSecondary),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                event,
+                log.getActionText(),
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   color: _textPrimary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 2),
               Text(
-                time,
+                '${log.adminName} - ${log.description}',
                 style: GoogleFonts.poppins(fontSize: 11, color: _textSecondary),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -663,6 +830,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
               label: 'Settings',
               color: _accentSecondary,
             ),
+            _buildActionButton(
+              icon: Icons.add_circle,
+              label: 'Create Schedule',
+              color: _accentTertiary,
+              onPressed: _showCreateScheduleDialog,
+            ),
           ],
         ),
       ],
@@ -673,29 +846,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
     required IconData icon,
     required String label,
     required Color color,
+    VoidCallback? onPressed,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
-              letterSpacing: 0.3,
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color, width: 1),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+                letterSpacing: 0.3,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

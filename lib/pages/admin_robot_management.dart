@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-const Color _darkBg = Color(0xFF0A0E1A);
-const Color _cardBg = Color(0xFF131820);
-const Color _accentPrimary = Color(0xFF00D9FF);
-const Color _accentSecondary = Color(0xFF1E90FF);
-const Color _warningColor = Color(0xFFFF6B35);
-const Color _errorColor = Color(0xFFFF3333);
-const Color _successColor = Color(0xFF00FF88);
-const Color _textPrimary = Color(0xFFE8E8E8);
-const Color _textSecondary = Color(0xFF8A8A8A);
+// Professional palette aligned with admin dashboard & user dashboard
+const Color _darkBg = Color(0xFF0A0E27);
+const Color _cardBg = Color(0xFF111827);
+const Color _accentPrimary = Color(0xFF4F46E5); // Indigo
+const Color _accentSecondary = Color(0xFF06B6D4); // Cyan
+const Color _warningColor = Color(0xFFF59E0B);
+const Color _errorColor = Color(0xFFEF4444);
+const Color _successColor = Color(0xFF10B981);
+const Color _textPrimary = Color(0xFFF9FAFB);
+const Color _textSecondary = Color(0xFFD1D5DB);
 
 class AdminRobotManagement extends StatefulWidget {
   const AdminRobotManagement({super.key});
@@ -38,44 +39,7 @@ class RobotData {
 }
 
 class _AdminRobotManagementState extends State<AdminRobotManagement> {
-  final List<RobotData> robots = [
-    RobotData(
-      id: 'ROBOT-001',
-      name: 'RoboClean Alpha',
-      status: 'Online',
-      location: 'Classroom',
-      firmware: 'v2.1.5',
-      battery: 87.0,
-      motorHealth: 95.0,
-      sensorHealth: 92.0,
-      speed: 50,
-      cleaningMode: 1,
-    ),
-    RobotData(
-      id: 'ROBOT-002',
-      name: 'RoboClean Beta',
-      status: 'Charging',
-      location: 'Hallway',
-      firmware: 'v2.1.5',
-      battery: 45.0,
-      motorHealth: 88.0,
-      sensorHealth: 85.0,
-      speed: 40,
-      cleaningMode: 2,
-    ),
-    RobotData(
-      id: 'ROBOT-003',
-      name: 'RoboClean Gamma',
-      status: 'Offline',
-      location: 'Trash Bin',
-      firmware: 'v2.0.8',
-      battery: 0.0,
-      motorHealth: 78.0,
-      sensorHealth: 80.0,
-      speed: 35,
-      cleaningMode: 1,
-    ),
-  ];
+  final List<RobotData> robots = [];
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +65,10 @@ class _AdminRobotManagementState extends State<AdminRobotManagement> {
   }
 
   Widget _buildRobotsGrid() {
+    if (robots.isEmpty) {
+      return _buildEmptyState();
+    }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -114,6 +82,122 @@ class _AdminRobotManagementState extends State<AdminRobotManagement> {
       itemBuilder: (context, index) {
         return _buildRobotCard(robots[index]);
       },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _accentPrimary.withOpacity(0.25), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Illustration circle
+          Container(
+            width: 96,
+            height: 96,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [_accentPrimary, _accentSecondary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _accentPrimary.withOpacity(0.4),
+                  blurRadius: 28,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.smart_toy, color: Colors.white, size: 40),
+          ),
+          const SizedBox(width: 24),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'No robots connected yet',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: _textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Once your RoboCleaner units are online, they will appear here with real‑time status, health, and controls.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: _textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.add, size: 16),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _accentPrimary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 10,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      label: Text(
+                        'Add Robot',
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    TextButton.icon(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.menu_book,
+                        size: 16,
+                        color: _accentSecondary,
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: _accentSecondary,
+                      ),
+                      label: Text(
+                        'View connection guide',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

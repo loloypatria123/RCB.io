@@ -3,14 +3,20 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
-const Color _cardBg = Color(0xFF131820);
-const Color _accentPrimary = Color(0xFF00D9FF);
-const Color _accentSecondary = Color(0xFF1E90FF);
-const Color _warningColor = Color(0xFFFF6B35);
-const Color _successColor = Color(0xFF00FF88);
-const Color _errorColor = Color(0xFFFF3333);
-const Color _textPrimary = Color(0xFFE8E8E8);
-const Color _textSecondary = Color(0xFF8A8A8A);
+// Professional palette aligned with sign-in / sign-up pages
+const Color _primaryDark = Color(0xFF0A0E27); // Scaffold background
+const Color _primaryMedium = Color(0xFF1A1F3A); // Sub-surfaces / dividers
+const Color _cardBg = Color(0xFF111827); // Card background
+
+const Color _accentPrimary = Color(0xFF4F46E5); // Indigo primary accent
+const Color _accentSecondary = Color(0xFF06B6D4); // Cyan secondary accent
+
+const Color _warningColor = Color(0xFFF59E0B); // Amber warning
+const Color _successColor = Color(0xFF10B981); // Green success
+const Color _errorColor = Color(0xFFEF4444); // Red error
+
+const Color _textPrimary = Color(0xFFF9FAFB); // Main text
+const Color _textSecondary = Color(0xFFD1D5DB); // Secondary text
 
 class UserDashboard extends StatefulWidget {
   const UserDashboard({super.key});
@@ -27,8 +33,8 @@ class _UserDashboardState extends State<UserDashboard> {
     UserPage(icon: Icons.smart_toy, label: 'Robot Control'),
     UserPage(icon: Icons.monitor_heart, label: 'Live Monitoring'),
     UserPage(icon: Icons.history, label: 'History'),
+    UserPage(icon: Icons.event_note, label: 'Admin Scheduling'),
     UserPage(icon: Icons.bug_report, label: 'Report Issue'),
-    UserPage(icon: Icons.settings, label: 'Settings'),
   ];
 
   @override
@@ -49,7 +55,7 @@ class _UserDashboardState extends State<UserDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E1A),
+      backgroundColor: _primaryDark,
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           if (authProvider.isAdmin) {
@@ -135,28 +141,12 @@ class _UserDashboardState extends State<UserDashboard> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            _buildNotificationCard(
-                              'Cleaning Completed',
-                              'ROBOT-001 finished cleaning Classroom A',
-                              'Just now',
-                              _successColor,
-                              Icons.check_circle,
-                            ),
-                            const SizedBox(height: 10),
-                            _buildNotificationCard(
-                              'Trash Container Full',
-                              'ROBOT-002 trash at 95% capacity',
-                              '15 min ago',
-                              _warningColor,
-                              Icons.delete_sweep,
-                            ),
-                            const SizedBox(height: 10),
-                            _buildNotificationCard(
-                              'Robot is Stuck',
-                              'ROBOT-001 detected stuck on carpet in Hallway',
-                              '1 hour ago',
-                              _errorColor,
-                              Icons.warning,
+                            Text(
+                              'No notifications',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: _textSecondary,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             SizedBox(
@@ -189,6 +179,12 @@ class _UserDashboardState extends State<UserDashboard> {
                   ],
                 ),
                 IconButton(
+                  icon: const Icon(Icons.settings, color: _accentPrimary),
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/UserSettingsPage');
+                  },
+                ),
+                IconButton(
                   icon: const Icon(Icons.logout, color: _errorColor),
                   onPressed: () => _logout(),
                 ),
@@ -211,12 +207,67 @@ class _UserDashboardState extends State<UserDashboard> {
       case 3:
         return _buildCleaningHistoryPage();
       case 4:
-        return _buildIssueReportingPage();
+        return _buildAdminSchedulingPage();
       case 5:
-        return _buildProfilePage();
+        return _buildIssueReportingPage();
       default:
         return _buildDashboardPage();
     }
+  }
+
+  Widget _buildAdminSchedulingPage() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Admin Scheduling',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: _textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'View and manage cleaning schedules created by admin.',
+            style: GoogleFonts.poppins(fontSize: 11, color: _textSecondary),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _cardBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _accentPrimary.withOpacity(0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Upcoming Schedules',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: _textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'No schedules available yet. Ask an admin to create a schedule.',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: _textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
   }
 
   Widget _buildDashboardPage() {
@@ -259,7 +310,7 @@ class _UserDashboardState extends State<UserDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Welcome Back!',
+            'Welcome',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -268,7 +319,7 @@ class _UserDashboardState extends State<UserDashboard> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Your cleaning robots are ready to work',
+            'No dashboard data available yet. Connect to the system to see robot status and activity.',
             style: GoogleFonts.poppins(fontSize: 12, color: Colors.white70),
           ),
         ],
@@ -294,83 +345,26 @@ class _UserDashboardState extends State<UserDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ROBOT-001',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: _textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Classroom A',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: _textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: _successColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _successColor, width: 1),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: _successColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'CLEANING',
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        color: _successColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          Text(
+            'Robot Status',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: _textPrimary,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF0A0E1A),
+              color: _primaryMedium,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatusIndicator('Idle', Icons.pause, _textSecondary),
-                _buildStatusIndicator(
-                  'Cleaning',
-                  Icons.cleaning_services,
-                  _successColor,
-                ),
-                _buildStatusIndicator('Returning', Icons.home, _accentPrimary),
-                _buildStatusIndicator('Error', Icons.error, _errorColor),
-              ],
+            child: Center(
+              child: Text(
+                'No robot status data available.',
+                style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+              ),
             ),
           ),
         ],
@@ -396,18 +390,19 @@ class _UserDashboardState extends State<UserDashboard> {
   }
 
   Widget _buildRobotMetricsGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      children: [
-        _buildMetricCard('Battery', '85%', _successColor, Icons.battery_full),
-        _buildMetricCard('Trash Level', '45%', _warningColor, Icons.delete),
-        _buildMetricCard('Water Tank', '92%', _successColor, Icons.water_drop),
-        _buildMetricCard('Uptime', '98%', _successColor, Icons.timer),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _accentPrimary.withOpacity(0.2)),
+      ),
+      child: Center(
+        child: Text(
+          'No metrics to display yet.',
+          style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+        ),
+      ),
     );
   }
 
@@ -484,32 +479,11 @@ class _UserDashboardState extends State<UserDashboard> {
             ),
           ),
           const SizedBox(height: 14),
-          _buildConnectivityItem(
-            'WiFi',
-            'Connected - 5GHz',
-            _successColor,
-            Icons.wifi,
-          ),
-          const SizedBox(height: 10),
-          _buildConnectivityItem(
-            'Bluetooth',
-            'Connected',
-            _successColor,
-            Icons.bluetooth,
-          ),
-          const SizedBox(height: 10),
-          _buildConnectivityItem(
-            'GPS',
-            'Active',
-            _successColor,
-            Icons.location_on,
-          ),
-          const SizedBox(height: 10),
-          _buildConnectivityItem(
-            'Cloud Sync',
-            'Last sync 2 min ago',
-            _accentPrimary,
-            Icons.cloud_done,
+          Center(
+            child: Text(
+              'No connectivity information available.',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
           ),
         ],
       ),
@@ -555,23 +529,19 @@ class _UserDashboardState extends State<UserDashboard> {
   }
 
   Widget _buildQuickActionsGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      children: [
-        _buildActionTile(
-          'Start Cleaning',
-          Icons.play_circle,
-          _successColor,
-          () {},
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _accentPrimary.withOpacity(0.2)),
+      ),
+      child: Center(
+        child: Text(
+          'No quick actions configured.',
+          style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
         ),
-        _buildActionTile('Pause', Icons.pause_circle, _warningColor, () {}),
-        _buildActionTile('Stop', Icons.stop_circle, _errorColor, () {}),
-        _buildActionTile('Return Home', Icons.home, _accentPrimary, () {}),
-      ],
+      ),
     );
   }
 
@@ -629,11 +599,11 @@ class _UserDashboardState extends State<UserDashboard> {
             style: GoogleFonts.poppins(fontSize: 11, color: _textSecondary),
           ),
           const SizedBox(height: 20),
-          _buildRobotControlCard(
-            'ROBOT-001',
-            'Classroom A',
-            _successColor,
-            true,
+          Center(
+            child: Text(
+              'No robots available to control.',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
           ),
           const SizedBox(height: 20),
         ],
@@ -973,15 +943,12 @@ class _UserDashboardState extends State<UserDashboard> {
             style: GoogleFonts.poppins(fontSize: 11, color: _textSecondary),
           ),
           const SizedBox(height: 20),
-          _buildLiveCameraCard(),
-          const SizedBox(height: 20),
-          _buildCleaningProgressCard(),
-          const SizedBox(height: 20),
-          _buildPathStatusCard(),
-          const SizedBox(height: 20),
-          _buildLiveAlertsCard(),
-          const SizedBox(height: 20),
-          _buildRealtimeMetricsCard(),
+          Center(
+            child: Text(
+              'No live monitoring data available.',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
+          ),
           const SizedBox(height: 20),
         ],
       ),
@@ -1012,18 +979,9 @@ class _UserDashboardState extends State<UserDashboard> {
                 Icon(Icons.videocam, color: _accentPrimary, size: 56),
                 const SizedBox(height: 12),
                 Text(
-                  'Live Camera Feed',
+                  'No live camera feed available.',
                   style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'ROBOT-001 • Classroom A',
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
+                    fontSize: 12,
                     color: _textSecondary,
                   ),
                 ),
@@ -1079,45 +1037,20 @@ class _UserDashboardState extends State<UserDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Cleaning Progress',
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: _textPrimary,
-                ),
-              ),
-              Text(
-                '68%',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: _accentPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: 0.68,
-              minHeight: 12,
-              backgroundColor: _accentPrimary.withOpacity(0.1),
-              valueColor: AlwaysStoppedAnimation(_accentPrimary),
+          Text(
+            'Cleaning Progress',
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: _textPrimary,
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildProgressMetric('Area Cleaned', '245 m²', _successColor),
-              _buildProgressMetric('Time Elapsed', '32 min', _accentPrimary),
-              _buildProgressMetric('Est. Remaining', '15 min', _warningColor),
-            ],
+          Center(
+            child: Text(
+              'No progress data available.',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
           ),
         ],
       ),
@@ -1164,18 +1097,12 @@ class _UserDashboardState extends State<UserDashboard> {
             ),
           ),
           const SizedBox(height: 14),
-          _buildPathStep('Classroom', Icons.location_on, _successColor, true),
-          _buildPathConnector(),
-          _buildPathStep('Door', Icons.door_front_door, _successColor, true),
-          _buildPathConnector(),
-          _buildPathStep(
-            'Hallway',
-            Icons.directions_walk,
-            _accentPrimary,
-            false,
+          Center(
+            child: Text(
+              'No path status data available.',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
           ),
-          _buildPathConnector(),
-          _buildPathStep('Trash Bin', Icons.delete, _textSecondary, false),
         ],
       ),
     );
@@ -1275,25 +1202,11 @@ class _UserDashboardState extends State<UserDashboard> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildAlertItem(
-            'Trash Full',
-            'Trash container at 95% capacity',
-            _warningColor,
-            Icons.delete_sweep,
-          ),
-          const SizedBox(height: 10),
-          _buildAlertItem(
-            'Stuck Detection',
-            'Robot may be stuck on carpet',
-            _errorColor,
-            Icons.warning,
-          ),
-          const SizedBox(height: 10),
-          _buildAlertItem(
-            'Low Battery',
-            'Battery at 25%, returning to base',
-            _errorColor,
-            Icons.battery_alert,
+          Center(
+            child: Text(
+              'No live alerts at the moment.',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
           ),
         ],
       ),
@@ -1370,13 +1283,12 @@ class _UserDashboardState extends State<UserDashboard> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildMetricRow('GPS Location', 'Classroom A - 12:45 PM'),
-          const SizedBox(height: 10),
-          _buildMetricRow('Speed', '0.5 m/s'),
-          const SizedBox(height: 10),
-          _buildMetricRow('Coverage', '245 m²'),
-          const SizedBox(height: 10),
-          _buildMetricRow('Battery', '45%'),
+          Center(
+            child: Text(
+              'No real-time metrics available.',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
+          ),
         ],
       ),
     );
@@ -1402,140 +1314,6 @@ class _UserDashboardState extends State<UserDashboard> {
     );
   }
 
-  Widget _buildNotificationCard(
-    String title,
-    String message,
-    String time,
-    Color color,
-    IconData icon,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: _cardBg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.08),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: color.withOpacity(0.3), width: 1),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _textPrimary,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      time,
-                      style: GoogleFonts.poppins(
-                        fontSize: 9,
-                        color: _textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  message,
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    color: _textSecondary,
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Notification marked as read',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            backgroundColor: _successColor,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Mark as read',
-                        style: GoogleFonts.poppins(
-                          fontSize: 9,
-                          color: color,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Notification dismissed',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            backgroundColor: _textSecondary,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Dismiss',
-                        style: GoogleFonts.poppins(
-                          fontSize: 9,
-                          color: _textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildCleaningHistoryPage() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -1556,78 +1334,12 @@ class _UserDashboardState extends State<UserDashboard> {
             style: GoogleFonts.poppins(fontSize: 11, color: _textSecondary),
           ),
           const SizedBox(height: 20),
-          // Statistics Cards
-          _buildHistoryStatsCards(),
           const SizedBox(height: 20),
-          // Filter Tabs
-          _buildHistoryFilterTabs(),
-          const SizedBox(height: 16),
-          // Cleaning Sessions
-          Text(
-            'Cleaning Sessions',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _textSecondary,
+          Center(
+            child: Text(
+              'No cleaning history available.',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
             ),
-          ),
-          const SizedBox(height: 10),
-          _buildCleaningSessionCard(
-            'Classroom A',
-            '45 min',
-            '245 m²',
-            'ROBOT-001',
-            '2025-11-26',
-            'Completed',
-          ),
-          const SizedBox(height: 10),
-          _buildCleaningSessionCard(
-            'Library',
-            '60 min',
-            '320 m²',
-            'ROBOT-001',
-            '2025-11-24',
-            'Completed',
-          ),
-          const SizedBox(height: 10),
-          _buildCleaningSessionCard(
-            'Hallway',
-            '35 min',
-            '200 m²',
-            'ROBOT-001',
-            '2025-11-23',
-            'Completed',
-          ),
-          const SizedBox(height: 20),
-          // Disposal Logs
-          Text(
-            'Disposal Logs',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: _textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildDisposalLogCard(
-            'ROBOT-001',
-            'Trash Disposed',
-            '2.5 kg',
-            '2025-11-26 14:30',
-          ),
-          const SizedBox(height: 10),
-          _buildDisposalLogCard(
-            'ROBOT-001',
-            'Trash Disposed',
-            '3.2 kg',
-            '2025-11-24 15:20',
-          ),
-          const SizedBox(height: 10),
-          _buildDisposalLogCard(
-            'ROBOT-001',
-            'Trash Disposed',
-            '2.8 kg',
-            '2025-11-23 13:15',
           ),
           const SizedBox(height: 20),
         ],
@@ -3476,103 +3188,11 @@ class _UserDashboardState extends State<UserDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Success',
+                        'No notifications',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
-                          fontWeight: FontWeight.w700,
                           color: _textSecondary,
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNotificationCard(
-                        'Cleaning Completed',
-                        'ROBOT-001 finished cleaning Classroom A',
-                        'Just now',
-                        _successColor,
-                        Icons.check_circle,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNotificationCard(
-                        'Disposal Completed',
-                        'Trash disposed successfully at 2:30 PM',
-                        '5 min ago',
-                        _successColor,
-                        Icons.delete_sweep,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Warnings',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNotificationCard(
-                        'Trash Container Full',
-                        'ROBOT-002 trash at 95% capacity',
-                        '15 min ago',
-                        _warningColor,
-                        Icons.delete_sweep,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNotificationCard(
-                        'Low Battery',
-                        'ROBOT-003 battery at 20%, returning to base',
-                        '32 min ago',
-                        _warningColor,
-                        Icons.battery_alert,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Errors',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNotificationCard(
-                        'Robot is Stuck',
-                        'ROBOT-001 detected stuck on carpet in Hallway',
-                        '1 hour ago',
-                        _errorColor,
-                        Icons.warning,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNotificationCard(
-                        'Robot Disconnected',
-                        'ROBOT-002 lost connection - last seen 2 hours ago',
-                        '2 hours ago',
-                        _errorColor,
-                        Icons.cloud_off,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Information',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNotificationCard(
-                        'New Schedule Added',
-                        'Daily cleaning scheduled for Library at 10:00 AM',
-                        '3 hours ago',
-                        _accentPrimary,
-                        Icons.schedule,
-                      ),
-                      const SizedBox(height: 10),
-                      _buildNotificationCard(
-                        'Admin Announcement',
-                        'System maintenance scheduled for tomorrow at 2:00 AM',
-                        '5 hours ago',
-                        _accentSecondary,
-                        Icons.notifications,
                       ),
                     ],
                   ),

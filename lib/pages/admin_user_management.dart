@@ -33,38 +33,7 @@ class UserData {
 }
 
 class _AdminUserManagementState extends State<AdminUserManagement> {
-  final List<UserData> users = [
-    UserData(
-      id: '1',
-      name: 'John Doe',
-      email: 'john@example.com',
-      role: 'User',
-      status: 'Active',
-      joinDate: '2024-11-01',
-      lastLogin: '2024-11-26 14:32',
-      activityCount: 45,
-    ),
-    UserData(
-      id: '2',
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      role: 'Admin',
-      status: 'Active',
-      joinDate: '2024-11-05',
-      lastLogin: '2024-11-26 13:15',
-      activityCount: 128,
-    ),
-    UserData(
-      id: '3',
-      name: 'Bob Johnson',
-      email: 'bob@example.com',
-      role: 'User',
-      status: 'Inactive',
-      joinDate: '2024-10-15',
-      lastLogin: '2024-11-20 10:00',
-      activityCount: 12,
-    ),
-  ];
+  final List<UserData> users = [];
 
   late TextEditingController _searchController;
   String _selectedFilter = 'All';

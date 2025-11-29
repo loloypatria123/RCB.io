@@ -13,15 +13,18 @@ import 'admin_settings.dart';
 import 'admin_analytics.dart';
 import 'admin_connectivity_settings.dart';
 
-// Professional Robotics Color Palette
-const Color _cardBg = Color(0xFF131820);
-const Color _sidebarBg = Color(0xFF0F1419);
-const Color _accentPrimary = Color(0xFF00D9FF);
-const Color _accentSecondary = Color(0xFF1E90FF);
-const Color _errorColor = Color(0xFFFF3333);
-const Color _successColor = Color(0xFF00FF88);
-const Color _textPrimary = Color(0xFFE8E8E8);
-const Color _textSecondary = Color(0xFF8A8A8A);
+// Professional palette aligned with user dashboard & auth pages
+const Color _sidebarBg = Color(0xFF0A0E27); // Sidebar / scaffold background
+const Color _cardBg = Color(0xFF111827); // Cards / panels
+
+const Color _accentPrimary = Color(0xFF4F46E5); // Indigo accent
+const Color _accentSecondary = Color(0xFF06B6D4); // Cyan accent
+
+const Color _errorColor = Color(0xFFEF4444);
+const Color _successColor = Color(0xFF10B981);
+
+const Color _textPrimary = Color(0xFFF9FAFB);
+const Color _textSecondary = Color(0xFFD1D5DB);
 
 class AdminMainLayout extends StatefulWidget {
   const AdminMainLayout({super.key});
@@ -114,7 +117,11 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
           if (!isMobile)
             _buildSidebar()
           else
-            Drawer(backgroundColor: _sidebarBg, child: _buildSidebarContent()),
+            // On mobile, sidebar is full-width Drawer, always showing text labels
+            Drawer(
+              backgroundColor: _sidebarBg,
+              child: _buildSidebarContent(true),
+            ),
           // Main Content
           Expanded(
             child: Column(
@@ -130,20 +137,32 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
   }
 
   Widget _buildSidebar() {
-    return Container(
-      width: _sidebarExpanded ? 280 : 80,
-      color: _sidebarBg,
-      child: Column(
-        children: [
-          _buildSidebarHeader(),
-          Expanded(child: _buildSidebarContent()),
-          _buildSidebarFooter(),
-        ],
+    return ClipRect(
+      child: AnimatedContainer(
+        clipBehavior: Clip.hardEdge,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeInOut,
+        width: _sidebarExpanded ? 260 : 88,
+        color: _sidebarBg,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Only show text labels when there is enough width to avoid overflow
+            final bool showText = constraints.maxWidth >= 180;
+
+            return Column(
+              children: [
+                _buildSidebarHeader(showText),
+                Expanded(child: _buildSidebarContent(showText)),
+                _buildSidebarFooter(showText),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildSidebarHeader() {
+  Widget _buildSidebarHeader(bool showText) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -170,7 +189,7 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
               size: 24,
             ),
           ),
-          if (_sidebarExpanded) ...[
+          if (showText) ...[
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -200,7 +219,7 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
     );
   }
 
-  Widget _buildSidebarContent() {
+  Widget _buildSidebarContent(bool showText) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: _menuItems.length,
@@ -210,7 +229,7 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
 
         return Padding(
           padding: EdgeInsets.symmetric(
-            horizontal: _sidebarExpanded ? 8 : 4,
+            horizontal: showText ? 8 : 4,
             vertical: 4,
           ),
           child: Material(
@@ -241,12 +260,38 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      item.icon,
-                      color: isSelected ? _accentPrimary : _textSecondary,
-                      size: 20,
+                    Builder(
+                      builder: (context) {
+                        final icon = Icon(
+                          item.icon,
+                          color: isSelected ? _accentPrimary : _textSecondary,
+                          size: 20,
+                        );
+
+                        if (showText) {
+                          return icon;
+                        }
+
+                        // When labels are hidden, show tooltip with label on hover
+                        return Tooltip(
+                          message: item.label,
+                          decoration: BoxDecoration(
+                            color: _cardBg,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: _accentPrimary.withOpacity(0.5),
+                              width: 1,
+                            ),
+                          ),
+                          textStyle: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: _textPrimary,
+                          ),
+                          child: icon,
+                        );
+                      },
                     ),
-                    if (_sidebarExpanded) ...[
+                    if (showText) ...[
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -271,7 +316,7 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
     );
   }
 
-  Widget _buildSidebarFooter() {
+  Widget _buildSidebarFooter(bool showText) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -289,7 +334,7 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
             child: Row(
               children: [
                 const Icon(Icons.logout, color: _errorColor, size: 20),
-                if (_sidebarExpanded) ...[
+                if (showText) ...[
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -327,6 +372,18 @@ class _AdminMainLayoutState extends State<AdminMainLayout> {
               icon: const Icon(Icons.menu, color: _accentPrimary),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
+              },
+            )
+          else
+            IconButton(
+              icon: Icon(
+                _sidebarExpanded ? Icons.chevron_left : Icons.chevron_right,
+                color: _accentPrimary,
+              ),
+              onPressed: () {
+                setState(() {
+                  _sidebarExpanded = !_sidebarExpanded;
+                });
               },
             ),
           Expanded(

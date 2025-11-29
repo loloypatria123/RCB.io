@@ -133,40 +133,40 @@ class _AdminAnalyticsState extends State<AdminAnalytics> {
         Expanded(
           child: _buildKPICard(
             'Total Cleanings',
-            '1,247',
+            '--',
             Icons.cleaning_services,
             _accentPrimary,
-            '+12% vs last month',
+            'No data',
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _buildKPICard(
             'Avg. Performance',
-            '94.2%',
+            '--',
             Icons.trending_up,
             _successColor,
-            '+2.1% improvement',
+            'No data',
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _buildKPICard(
             'Robot Uptime',
-            '99.1%',
+            '--',
             Icons.check_circle,
             _successColor,
-            '-0.3% downtime',
+            'No data',
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _buildKPICard(
             'Active Alerts',
-            '23',
+            '--',
             Icons.warning,
             _warningColor,
-            '5 critical',
+            'No data',
           ),
         ),
       ],
@@ -252,7 +252,12 @@ class _AdminAnalyticsState extends State<AdminAnalytics> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildSimpleBarChart([92, 88, 95, 91, 94, 89, 96], _accentPrimary),
+          Center(
+            child: Text(
+              'No data available',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -315,7 +320,12 @@ class _AdminAnalyticsState extends State<AdminAnalytics> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildSimpleBarChart([45, 52, 48, 61, 55, 58, 63], _accentSecondary),
+          Center(
+            child: Text(
+              'No data available',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -378,7 +388,12 @@ class _AdminAnalyticsState extends State<AdminAnalytics> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildSimpleBarChart([12, 15, 18, 14, 11, 16, 13], _warningColor),
+          Center(
+            child: Text(
+              'No data available',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -441,72 +456,11 @@ class _AdminAnalyticsState extends State<AdminAnalytics> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _successColor.withValues(alpha: 0.1),
-                      border: Border.all(color: _successColor, width: 2),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '99.1%',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _successColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Uptime',
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      color: _textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _errorColor.withValues(alpha: 0.1),
-                      border: Border.all(color: _errorColor, width: 2),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '0.9%',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _errorColor,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Downtime',
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      color: _textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          Center(
+            child: Text(
+              'No data available',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
           ),
         ],
       ),
@@ -536,13 +490,12 @@ class _AdminAnalyticsState extends State<AdminAnalytics> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildActivityRow('Active Users', '342', _accentPrimary),
-          const SizedBox(height: 12),
-          _buildActivityRow('Total Sessions', '1,856', _accentSecondary),
-          const SizedBox(height: 12),
-          _buildActivityRow('Avg. Session Duration', '12m 34s', _successColor),
-          const SizedBox(height: 12),
-          _buildActivityRow('New Users (This Month)', '87', _warningColor),
+          Center(
+            child: Text(
+              'No data available',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
+          ),
         ],
       ),
     );
@@ -599,34 +552,11 @@ class _AdminAnalyticsState extends State<AdminAnalytics> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildInsightItem(
-            'Peak Cleaning Hours',
-            '2:00 PM - 4:00 PM',
-            Icons.schedule,
-          ),
-          const SizedBox(height: 12),
-          _buildInsightItem(
-            'Most Used Robot',
-            'ROBOT-001 (342 sessions)',
-            Icons.smart_toy,
-          ),
-          const SizedBox(height: 12),
-          _buildInsightItem(
-            'Busiest Day',
-            'Friday (287 cleanings)',
-            Icons.calendar_today,
-          ),
-          const SizedBox(height: 12),
-          _buildInsightItem(
-            'Avg. Cleaning Duration',
-            '45 minutes',
-            Icons.timer,
-          ),
-          const SizedBox(height: 12),
-          _buildInsightItem(
-            'Total Area Cleaned',
-            '12,450 m²',
-            Icons.square_foot,
+          Center(
+            child: Text(
+              'No insights available',
+              style: GoogleFonts.poppins(fontSize: 12, color: _textSecondary),
+            ),
           ),
         ],
       ),

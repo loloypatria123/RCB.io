@@ -38,41 +38,11 @@ class ScheduleData {
 }
 
 class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
-  final List<ScheduleData> schedules = [
-    ScheduleData(
-      id: 'SCH-001',
-      name: 'Morning Classroom Clean',
-      area: 'Classroom A',
-      robot: 'ROBOT-001',
-      frequency: 'Daily',
-      startTime: '08:00 AM',
-      endTime: '09:00 AM',
-      enabled: true,
-      daysOfWeek: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-    ),
-    ScheduleData(
-      id: 'SCH-002',
-      name: 'Hallway Maintenance',
-      area: 'Hallway',
-      robot: 'ROBOT-002',
-      frequency: 'Weekly',
-      startTime: '02:00 PM',
-      endTime: '03:30 PM',
-      enabled: true,
-      daysOfWeek: ['Mon', 'Wed', 'Fri'],
-    ),
-    ScheduleData(
-      id: 'SCH-003',
-      name: 'Evening Deep Clean',
-      area: 'All Areas',
-      robot: 'ROBOT-003',
-      frequency: 'Weekly',
-      startTime: '06:00 PM',
-      endTime: '08:00 PM',
-      enabled: false,
-      daysOfWeek: ['Sat'],
-    ),
-  ];
+  final List<ScheduleData> schedules = [];
+
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedStartTime;
+  TimeOfDay? _selectedEndTime;
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +89,194 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
           _buildUpcomingTimeline(),
         ],
       ),
+    );
+  }
+
+  String _formatDateLabel() {
+    if (_selectedDate == null) return 'Select date';
+    return '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}';
+  }
+
+  String _formatTimeLabel(TimeOfDay? time, String placeholder) {
+    if (time == null) return placeholder;
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  Widget _buildDatePickerField({String? initialDateLabel}) {
+    final label = _selectedDate == null && initialDateLabel != null
+        ? initialDateLabel
+        : _formatDateLabel();
+    return InkWell(
+      onTap: () async {
+        final now = DateTime.now();
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: now,
+          firstDate: DateTime(now.year - 1),
+          lastDate: DateTime(now.year + 2),
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: const ColorScheme.dark(
+                  primary: _accentPrimary,
+                  surface: _cardBg,
+                  onSurface: _textPrimary,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+        if (picked != null) {
+          setState(() {
+            _selectedDate = picked;
+          });
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0A0E1A),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _accentPrimary.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.calendar_today, color: _accentPrimary, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.poppins(color: _textPrimary, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeRangeRow({
+    String? initialStartLabel,
+    String? initialEndLabel,
+  }) {
+    final startLabel = _selectedStartTime == null && initialStartLabel != null
+        ? initialStartLabel
+        : _formatTimeLabel(_selectedStartTime, 'Start time');
+    final endLabel = _selectedEndTime == null && initialEndLabel != null
+        ? initialEndLabel
+        : _formatTimeLabel(_selectedEndTime, 'End time');
+
+    return Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: () async {
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.now(),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.dark(
+                        primary: _accentPrimary,
+                        surface: _cardBg,
+                        onSurface: _textPrimary,
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (picked != null) {
+                setState(() {
+                  _selectedStartTime = picked;
+                });
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0A0E1A),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _accentPrimary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.access_time, color: _accentPrimary, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      startLabel,
+                      style: GoogleFonts.poppins(
+                        color: _textPrimary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: InkWell(
+            onTap: () async {
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.now(),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: const ColorScheme.dark(
+                        primary: _accentPrimary,
+                        surface: _cardBg,
+                        onSurface: _textPrimary,
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (picked != null) {
+                setState(() {
+                  _selectedEndTime = picked;
+                });
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0A0E1A),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _accentPrimary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.access_time, color: _accentSecondary, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      endLabel,
+                      style: GoogleFonts.poppins(
+                        color: _textPrimary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -407,76 +565,24 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
               width: 1,
             ),
           ),
-          child: Column(
-            children: [
-              _buildTimelineItem(
-                'Today - 08:00 AM',
-                'Morning Classroom Clean',
-                _successColor,
-              ),
-              const Divider(color: Color(0xFF2A3040)),
-              _buildTimelineItem(
-                'Today - 02:00 PM',
-                'Hallway Maintenance',
-                _accentPrimary,
-              ),
-              const Divider(color: Color(0xFF2A3040)),
-              _buildTimelineItem(
-                'Tomorrow - 08:00 AM',
-                'Morning Classroom Clean',
-                _successColor,
-              ),
-              const Divider(color: Color(0xFF2A3040)),
-              _buildTimelineItem(
-                'Wed - 02:00 PM',
-                'Hallway Maintenance',
-                _accentPrimary,
-              ),
-              const Divider(color: Color(0xFF2A3040)),
-              _buildTimelineItem(
-                'Sat - 06:00 PM',
-                'Evening Deep Clean',
-                _warningColor,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimelineItem(String time, String name, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                time,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
+          child: schedules.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      'No upcoming schedules',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: _textSecondary,
+                      ),
+                    ),
+                  ),
+                )
+              : Column(
+                  children: [
+                    // Timeline items will be populated from database
+                  ],
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                name,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: _textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );
@@ -498,6 +604,9 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
   }
 
   void _showAddScheduleDialog() {
+    _selectedDate = null;
+    _selectedStartTime = null;
+    _selectedEndTime = null;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -517,7 +626,9 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
               const SizedBox(height: 12),
               _buildTextField('Area/Room'),
               const SizedBox(height: 12),
-              _buildTextField('Robot ID'),
+              _buildDatePickerField(),
+              const SizedBox(height: 12),
+              _buildTimeRangeRow(),
             ],
           ),
         ),
@@ -557,6 +668,9 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
   }
 
   void _showEditScheduleDialog(ScheduleData schedule) {
+    _selectedDate = null;
+    _selectedStartTime = null;
+    _selectedEndTime = null;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -576,7 +690,12 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
               const SizedBox(height: 12),
               _buildTextField('Area/Room', initialValue: schedule.area),
               const SizedBox(height: 12),
-              _buildTextField('Robot ID', initialValue: schedule.robot),
+              _buildDatePickerField(initialDateLabel: schedule.startTime),
+              const SizedBox(height: 12),
+              _buildTimeRangeRow(
+                initialStartLabel: schedule.startTime,
+                initialEndLabel: schedule.endTime,
+              ),
             ],
           ),
         ),

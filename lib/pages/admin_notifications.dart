@@ -33,48 +33,7 @@ class NotificationData {
 }
 
 class _AdminNotificationsState extends State<AdminNotifications> {
-  final List<NotificationData> notifications = [
-    NotificationData(
-      id: 'N001',
-      title: 'Trash Full',
-      message: 'ROBOT-001 trash container is at 95% capacity',
-      type: 'trash_full',
-      timestamp: '2 minutes ago',
-    ),
-    NotificationData(
-      id: 'N002',
-      title: 'Robot Stuck',
-      message: 'ROBOT-002 is stuck in Hallway. Manual intervention required.',
-      type: 'robot_stuck',
-      timestamp: '15 minutes ago',
-      acknowledged: true,
-    ),
-    NotificationData(
-      id: 'N003',
-      title: 'Low Battery',
-      message: 'ROBOT-003 battery level is 12%. Charging recommended.',
-      type: 'low_battery',
-      timestamp: '1 hour ago',
-    ),
-    NotificationData(
-      id: 'N004',
-      title: 'Disposal Completed',
-      message: 'ROBOT-001 completed disposal sequence successfully',
-      type: 'disposal_completed',
-      timestamp: '3 hours ago',
-      acknowledged: true,
-      resolved: true,
-    ),
-    NotificationData(
-      id: 'N005',
-      title: 'Cleaning Completed',
-      message: 'Classroom A cleaning session completed in 45 minutes',
-      type: 'cleaning_completed',
-      timestamp: '5 hours ago',
-      acknowledged: true,
-      resolved: true,
-    ),
-  ];
+  final List<NotificationData> notifications = [];
 
   String _selectedFilter = 'All';
   String _sortBy = 'Date';

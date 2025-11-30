@@ -4,6 +4,8 @@ enum NotificationType {
   scheduleReminder,
   scheduleCompleted,
   alert,
+  reportReply,
+  reportResolved,
 }
 
 class UserNotification {
@@ -78,6 +80,10 @@ class UserNotification {
         return NotificationType.scheduleCompleted;
       case 'alert':
         return NotificationType.alert;
+      case 'reportReply':
+        return NotificationType.reportReply;
+      case 'reportResolved':
+        return NotificationType.reportResolved;
       default:
         return NotificationType.scheduleAdded;
     }

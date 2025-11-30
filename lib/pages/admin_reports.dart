@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:provider/provider.dart';
+import '../services/report_service.dart';
+import '../models/report_model.dart';
+import '../providers/auth_provider.dart';
 
 const Color _cardBg = Color(0xFF131820);
 const Color _accentPrimary = Color(0xFF00D9FF);
@@ -17,29 +22,8 @@ class AdminReports extends StatefulWidget {
   State<AdminReports> createState() => _AdminReportsState();
 }
 
-class ReportData {
-  final String id, title, category, status, submittedBy, submittedDate;
-  final String description;
-  bool resolved;
-  bool archived;
-  final List<String> replies;
-
-  ReportData({
-    required this.id,
-    required this.title,
-    required this.category,
-    required this.status,
-    required this.submittedBy,
-    required this.submittedDate,
-    required this.description,
-    this.resolved = false,
-    this.archived = false,
-    this.replies = const [],
-  });
-}
-
 class _AdminReportsState extends State<AdminReports> {
-  final List<ReportData> reports = [];
+  List<Report> _reports = [];
 
   String _selectedCategory = 'All';
   String _selectedStatus = 'All';
@@ -51,6 +35,17 @@ class _AdminReportsState extends State<AdminReports> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    _loadReports();
+  }
+
+  void _loadReports() {
+    ReportService.getAllReports().listen((reports) {
+      if (mounted) {
+        setState(() {
+          _reports = reports;
+        });
+      }
+    });
   }
 
   @override
@@ -59,23 +54,46 @@ class _AdminReportsState extends State<AdminReports> {
     super.dispose();
   }
 
-  List<ReportData> get filteredReports {
-    List<ReportData> filtered = reports.where((r) => !r.archived).toList();
+  List<Report> get filteredReports {
+    List<Report> filtered = _reports.where((r) => !r.archived).toList();
 
     if (_selectedCategory != 'All') {
-      filtered = filtered
-          .where((r) => r.category == _selectedCategory)
-          .toList();
+      ReportCategory? selectedCat;
+      switch (_selectedCategory) {
+        case 'Robot Stuck':
+          selectedCat = ReportCategory.robotStuck;
+          break;
+        case 'Navigation Problem':
+          selectedCat = ReportCategory.navigationProblem;
+          break;
+        case 'Cleaning Error':
+          selectedCat = ReportCategory.cleaningError;
+          break;
+        case 'App Issue':
+          selectedCat = ReportCategory.appIssue;
+          break;
+        case 'Battery Issue':
+          selectedCat = ReportCategory.batteryIssue;
+          break;
+        case 'Sensor Error':
+          selectedCat = ReportCategory.sensorError;
+          break;
+        case 'Other':
+          selectedCat = ReportCategory.other;
+          break;
+      }
+      if (selectedCat != null) {
+        filtered = filtered.where((r) => r.category == selectedCat).toList();
+      }
     }
 
     if (_selectedStatus != 'All') {
-      filtered = filtered
-          .where(
-            (r) =>
-                r.status == _selectedStatus ||
-                (r.resolved && _selectedStatus == 'Resolved'),
-          )
-          .toList();
+      if (_selectedStatus == 'Open') {
+        filtered = filtered.where((r) => r.status == ReportStatus.open).toList();
+      } else if (_selectedStatus == 'Resolved') {
+        filtered =
+            filtered.where((r) => r.status == ReportStatus.resolved).toList();
+      }
     }
 
     if (_searchQuery.isNotEmpty) {
@@ -86,7 +104,7 @@ class _AdminReportsState extends State<AdminReports> {
                 r.description.toLowerCase().contains(
                   _searchQuery.toLowerCase(),
                 ) ||
-                r.submittedBy.toLowerCase().contains(
+                r.userName.toLowerCase().contains(
                   _searchQuery.toLowerCase(),
                 ),
           )
@@ -145,9 +163,11 @@ class _AdminReportsState extends State<AdminReports> {
   }
 
   Widget _buildStatsRow() {
-    final openReports = reports.where((r) => !r.resolved && !r.archived).length;
-    final resolvedReports = reports
-        .where((r) => r.resolved && !r.archived)
+    final openReports = _reports
+        .where((r) => r.status == ReportStatus.open && !r.archived)
+        .length;
+    final resolvedReports = _reports
+        .where((r) => r.status == ReportStatus.resolved && !r.archived)
         .length;
 
     return Row(
@@ -155,7 +175,7 @@ class _AdminReportsState extends State<AdminReports> {
         Expanded(
           child: _buildStatCard(
             'Total Reports',
-            '${reports.length}',
+            '${_reports.length}',
             Icons.report,
             _accentPrimary,
           ),
@@ -270,13 +290,20 @@ class _AdminReportsState extends State<AdminReports> {
               ),
               child: DropdownButton<String>(
                 value: _selectedCategory,
-                items: ['All', 'bug', 'feedback', 'feature_request'].map((cat) {
+                items: [
+                  'All',
+                  'Robot Stuck',
+                  'Navigation Problem',
+                  'Cleaning Error',
+                  'App Issue',
+                  'Battery Issue',
+                  'Sensor Error',
+                  'Other'
+                ].map((cat) {
                   return DropdownMenuItem(
                     value: cat,
                     child: Text(
-                      cat == 'All'
-                          ? 'All Categories'
-                          : cat.replaceAll('_', ' ').toUpperCase(),
+                      cat == 'All' ? 'All Categories' : cat,
                       style: GoogleFonts.poppins(
                         color: _textPrimary,
                         fontSize: 12,
@@ -350,9 +377,11 @@ class _AdminReportsState extends State<AdminReports> {
     );
   }
 
-  Widget _buildReportCard(ReportData report) {
+  Widget _buildReportCard(Report report) {
     final categoryColor = _getCategoryColor(report.category);
-    final statusColor = report.resolved ? _successColor : _warningColor;
+    final statusColor = report.status == ReportStatus.resolved
+        ? _successColor
+        : _warningColor;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -397,7 +426,7 @@ class _AdminReportsState extends State<AdminReports> {
                             ),
                           ),
                           child: Text(
-                            report.category.replaceAll('_', ' ').toUpperCase(),
+                            report.categoryDisplayName.toUpperCase(),
                             style: GoogleFonts.poppins(
                               fontSize: 9,
                               color: categoryColor,
@@ -417,7 +446,7 @@ class _AdminReportsState extends State<AdminReports> {
                             border: Border.all(color: statusColor, width: 0.5),
                           ),
                           child: Text(
-                            report.resolved ? 'RESOLVED' : 'OPEN',
+                            report.statusDisplayName.toUpperCase(),
                             style: GoogleFonts.poppins(
                               fontSize: 9,
                               color: statusColor,
@@ -433,7 +462,7 @@ class _AdminReportsState extends State<AdminReports> {
               PopupMenuButton<String>(
                 onSelected: (value) => _handleReportAction(value, report),
                 itemBuilder: (_) => [
-                  if (!report.resolved)
+                  if (report.status != ReportStatus.resolved)
                     PopupMenuItem(
                       value: 'resolve',
                       child: Row(
@@ -500,7 +529,7 @@ class _AdminReportsState extends State<AdminReports> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'By ${report.submittedBy} • ${report.submittedDate}',
+                'By ${report.userName} • ${_formatDate(report.createdAt)}',
                 style: GoogleFonts.poppins(
                   fontSize: 10,
                   color: _textSecondary.withOpacity(0.7),
@@ -533,48 +562,81 @@ class _AdminReportsState extends State<AdminReports> {
     );
   }
 
-  Color _getCategoryColor(String category) {
+  Color _getCategoryColor(ReportCategory category) {
     switch (category) {
-      case 'bug':
+      case ReportCategory.robotStuck:
+      case ReportCategory.cleaningError:
         return _errorColor;
-      case 'feedback':
-        return _accentPrimary;
-      case 'feature_request':
+      case ReportCategory.navigationProblem:
+      case ReportCategory.batteryIssue:
+      case ReportCategory.sensorError:
+        return _warningColor;
+      case ReportCategory.appIssue:
         return _accentSecondary;
-      default:
-        return _textSecondary;
+      case ReportCategory.other:
+        return _accentPrimary;
     }
   }
 
-  void _handleReportAction(String action, ReportData report) {
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        if (difference.inMinutes == 0) {
+          return 'Just now';
+        }
+        return '${difference.inMinutes}m ago';
+      }
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  Future<void> _handleReportAction(String action, Report report) async {
     if (action == 'resolve') {
-      setState(() => report.resolved = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Report marked as resolved',
-            style: GoogleFonts.poppins(),
-          ),
-          backgroundColor: _successColor,
-        ),
+      final success = await ReportService.updateReportStatus(
+        report.id,
+        ReportStatus.resolved,
       );
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Report marked as resolved',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: _successColor,
+          ),
+        );
+      }
     } else if (action == 'reply') {
       _showReplyDialog(report);
     } else if (action == 'view') {
       _showDetailsDialog(report);
     } else if (action == 'archive') {
-      setState(() => report.archived = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Report archived', style: GoogleFonts.poppins()),
-          backgroundColor: _warningColor,
-        ),
-      );
+      final success = await ReportService.archiveReport(report.id);
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Report archived', style: GoogleFonts.poppins()),
+            backgroundColor: _warningColor,
+          ),
+        );
+      }
     }
   }
 
-  void _showReplyDialog(ReportData report) {
+  void _showReplyDialog(Report report) {
     final replyController = TextEditingController();
+    final user = firebase_auth.FirebaseAuth.instance.currentUser;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     showDialog(
       context: context,
@@ -636,17 +698,54 @@ class _AdminReportsState extends State<AdminReports> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Reply sent to user',
-                    style: GoogleFonts.poppins(),
+            onPressed: () async {
+              if (replyController.text.trim().isEmpty) {
+                return;
+              }
+
+              if (user == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Please log in to reply',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    backgroundColor: _errorColor,
                   ),
-                  backgroundColor: _successColor,
-                ),
+                );
+                return;
+              }
+
+              final adminName = authProvider.userModel?.name ?? 
+                                user.displayName ?? 
+                                'Admin';
+              final adminEmail = user.email ?? 
+                                authProvider.userModel?.email ?? 
+                                '';
+
+              final success = await ReportService.addReply(
+                reportId: report.id,
+                adminId: user.uid,
+                adminName: adminName,
+                adminEmail: adminEmail,
+                message: replyController.text.trim(),
               );
+
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Reply sent to user'
+                          : 'Failed to send reply',
+                      style: GoogleFonts.poppins(),
+                    ),
+                    backgroundColor:
+                        success ? _successColor : _errorColor,
+                  ),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _accentPrimary,
@@ -662,7 +761,7 @@ class _AdminReportsState extends State<AdminReports> {
     );
   }
 
-  void _showDetailsDialog(ReportData report) {
+  void _showDetailsDialog(Report report) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -679,16 +778,15 @@ class _AdminReportsState extends State<AdminReports> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow(
-                'Category',
-                report.category.replaceAll('_', ' ').toUpperCase(),
-              ),
+              _buildDetailRow('Category', report.categoryDisplayName),
               const SizedBox(height: 12),
-              _buildDetailRow('Status', report.resolved ? 'RESOLVED' : 'OPEN'),
+              _buildDetailRow('Status', report.statusDisplayName),
               const SizedBox(height: 12),
-              _buildDetailRow('Submitted By', report.submittedBy),
+              _buildDetailRow('Submitted By', report.userName),
               const SizedBox(height: 12),
-              _buildDetailRow('Date', report.submittedDate),
+              _buildDetailRow('Email', report.userEmail),
+              const SizedBox(height: 12),
+              _buildDetailRow('Date', _formatDate(report.createdAt)),
               const SizedBox(height: 16),
               Text(
                 'Description',
@@ -724,12 +822,26 @@ class _AdminReportsState extends State<AdminReports> {
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: _accentPrimary, width: 0.5),
                       ),
-                      child: Text(
-                        reply,
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          color: _textPrimary,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${reply.adminName} (${_formatDate(reply.createdAt)})',
+                            style: GoogleFonts.poppins(
+                              fontSize: 9,
+                              color: _accentPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            reply.message,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              color: _textPrimary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );

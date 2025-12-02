@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/cleaning_schedule_model.dart';
 import '../models/audit_log_model.dart';
 import '../models/notification_model.dart';
+import 'audit_service.dart';
 
 class ScheduleService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -127,14 +128,17 @@ class ScheduleService {
           .set(schedule.toJson());
 
       // Log the action
-      await _logAuditAction(
-        adminId: adminId,
-        adminEmail: adminEmail,
-        adminName: adminName,
-        action: AuditAction.scheduleCreated,
-        description: 'Created cleaning schedule: $title',
+      await AuditService.logScheduleCreated(
         scheduleId: scheduleId,
-        affectedUserId: assignedUserId,
+        scheduleName: title,
+        actorId: adminId,
+        actorName: adminName,
+        scheduleData: {
+          'description': description,
+          'scheduledDate': scheduledDate.toIso8601String(),
+          'scheduledTime': scheduledTime.toIso8601String(),
+          'assignedUserId': assignedUserId,
+        },
       );
 
       // Create notification for assigned user if applicable
@@ -148,12 +152,12 @@ class ScheduleService {
         );
 
         // Log the notification action
-        await _logAuditAction(
-          adminId: adminId,
-          adminEmail: adminEmail,
-          adminName: adminName,
+        await AuditService.log(
           action: AuditAction.userNotified,
           description: 'Notified user about new schedule: $title',
+          actorId: adminId,
+          actorName: adminName,
+          actorType: 'admin',
           scheduleId: scheduleId,
           affectedUserId: assignedUserId,
         );
@@ -212,15 +216,18 @@ class ScheduleService {
           .update(updatedSchedule.toJson());
 
       // Log the action
-      await _logAuditAction(
-        adminId: adminId,
-        adminEmail: adminEmail,
-        adminName: adminName,
-        action: AuditAction.scheduleUpdated,
-        description:
-            'Updated cleaning schedule: ${title ?? currentSchedule.title}',
+      await AuditService.logScheduleUpdated(
         scheduleId: scheduleId,
-        affectedUserId: currentSchedule.assignedUserId,
+        scheduleName: title ?? currentSchedule.title,
+        actorId: adminId,
+        actorName: adminName,
+        changes: {
+          if (title != null) 'title': title,
+          if (description != null) 'description': description,
+          if (scheduledDate != null) 'scheduledDate': scheduledDate.toIso8601String(),
+          if (scheduledTime != null) 'scheduledTime': scheduledTime.toIso8601String(),
+          if (status != null) 'status': status.toString().split('.').last,
+        },
       );
 
       print('✅ Schedule updated successfully: $scheduleId');
@@ -255,14 +262,11 @@ class ScheduleService {
       await _firestore.collection('schedules').doc(scheduleId).delete();
 
       // Log the action
-      await _logAuditAction(
-        adminId: adminId,
-        adminEmail: adminEmail,
-        adminName: adminName,
-        action: AuditAction.scheduleDeleted,
-        description: 'Deleted cleaning schedule: ${schedule.title}',
+      await AuditService.logScheduleDeleted(
         scheduleId: scheduleId,
-        affectedUserId: schedule.assignedUserId,
+        scheduleName: schedule.title,
+        actorId: adminId,
+        actorName: adminName,
       );
 
       print('✅ Schedule deleted successfully: $scheduleId');
@@ -401,37 +405,6 @@ class ScheduleService {
         );
   }
 
-  /// Log audit action
-  static Future<void> _logAuditAction({
-    required String adminId,
-    required String adminEmail,
-    required String adminName,
-    required AuditAction action,
-    required String description,
-    String? scheduleId,
-    String? affectedUserId,
-  }) async {
-    try {
-      final logId = _firestore.collection('audit_logs').doc().id;
-      final log = AuditLog(
-        id: logId,
-        adminId: adminId,
-        adminEmail: adminEmail,
-        adminName: adminName,
-        action: action,
-        description: description,
-        scheduleId: scheduleId,
-        affectedUserId: affectedUserId,
-        timestamp: DateTime.now(),
-      );
-
-      await _firestore.collection('audit_logs').doc(logId).set(log.toJson());
-
-      print('✅ Audit log created: $logId');
-    } catch (e) {
-      print('❌ Error logging audit action: $e');
-    }
-  }
 
   /// Create notification for user
   static Future<void> _createNotification({
@@ -443,21 +416,25 @@ class ScheduleService {
   }) async {
     try {
       final notificationId = _firestore.collection('notifications').doc().id;
-      final notification = UserNotification(
-        id: notificationId,
-        userId: userId,
-        type: type,
-        title: title,
-        message: message,
-        scheduleId: scheduleId,
-        isRead: false,
-        createdAt: DateTime.now(),
-      );
+      final now = DateTime.now();
+      
+      // Create notification data with Firestore Timestamp for createdAt
+      final notificationData = {
+        'id': notificationId,
+        'userId': userId,
+        'type': type.toString().split('.').last,
+        'title': title,
+        'message': message,
+        'scheduleId': scheduleId,
+        'isRead': false,
+        'createdAt': Timestamp.fromDate(now), // Use Firestore Timestamp
+        'readAt': null,
+      };
 
       await _firestore
           .collection('notifications')
           .doc(notificationId)
-          .set(notification.toJson());
+          .set(notificationData);
 
       print('✅ Notification created for user: $userId');
     } catch (e) {
@@ -509,7 +486,37 @@ class ScheduleService {
           .get();
 
       return snapshot.docs
-          .map((doc) => UserNotification.fromJson(doc.data()))
+          .map((doc) {
+            final data = doc.data();
+            // Convert Firestore Timestamp to ISO string for UserNotification model
+            final createdAtValue = data['createdAt'];
+            String? createdAtString;
+            
+            if (createdAtValue is Timestamp) {
+              createdAtString = createdAtValue.toDate().toIso8601String();
+            } else if (createdAtValue is String) {
+              createdAtString = createdAtValue;
+            } else {
+              createdAtString = DateTime.now().toIso8601String();
+            }
+            
+            // Convert readAt if it exists
+            final readAtValue = data['readAt'];
+            String? readAtString;
+            if (readAtValue is Timestamp) {
+              readAtString = readAtValue.toDate().toIso8601String();
+            } else if (readAtValue is String) {
+              readAtString = readAtValue;
+            }
+            
+            // Use Firestore document ID as the notification ID
+            return UserNotification.fromJson({
+              ...data,
+              'id': doc.id,
+              'createdAt': createdAtString,
+              if (readAtString != null) 'readAt': readAtString,
+            });
+          })
           .toList();
     } catch (e) {
       print('❌ Error fetching notifications: $e');
@@ -522,17 +529,95 @@ class ScheduleService {
     String userId, {
     int limit = 50,
   }) {
-    return _firestore
-        .collection('notifications')
-        .where('userId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
-        .limit(limit)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => UserNotification.fromJson(doc.data()))
-              .toList(),
-        );
+    try {
+      // Query with orderBy (requires composite index: userId + createdAt)
+      return _firestore
+          .collection('notifications')
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .snapshots()
+          .map(
+            (snapshot) {
+              try {
+                final notifications = _parseNotifications(snapshot.docs, userId);
+                
+                print('📬 Stream returned ${notifications.length} notifications for user: $userId');
+                if (notifications.isNotEmpty) {
+                  print('   First notification: ${notifications.first.title} (read: ${notifications.first.isRead}, id: ${notifications.first.id})');
+                }
+                return notifications;
+              } catch (e) {
+                print('❌ Error processing notification stream: $e');
+                return <UserNotification>[];
+              }
+            },
+          )
+          .handleError((error) {
+            print('❌ Error in notification stream: $error');
+            print('   User ID: $userId');
+            print('   Error type: ${error.runtimeType}');
+            print('   ⚠️ This might be due to missing composite index!');
+            print('   ⚠️ Create index: notifications collection');
+            print('   ⚠️ Fields: userId (Ascending) + createdAt (Descending)');
+            // Return empty list on error
+            return <UserNotification>[];
+          });
+    } catch (e) {
+      print('❌ Error creating notification stream: $e');
+      // Return an empty stream on error
+      return Stream.value(<UserNotification>[]);
+    }
+  }
+
+  /// Helper method to parse notification documents
+  static List<UserNotification> _parseNotifications(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    String userId,
+  ) {
+    return docs
+        .map((doc) {
+          try {
+            final data = doc.data();
+            // Convert Firestore Timestamp to ISO string for UserNotification model
+            final createdAtValue = data['createdAt'];
+            String? createdAtString;
+            
+            if (createdAtValue is Timestamp) {
+              createdAtString = createdAtValue.toDate().toIso8601String();
+            } else if (createdAtValue is String) {
+              createdAtString = createdAtValue;
+            } else {
+              createdAtString = DateTime.now().toIso8601String();
+            }
+            
+            // Convert readAt if it exists
+            final readAtValue = data['readAt'];
+            String? readAtString;
+            if (readAtValue is Timestamp) {
+              readAtString = readAtValue.toDate().toIso8601String();
+            } else if (readAtValue is String) {
+              readAtString = readAtValue;
+            }
+            
+            // Use Firestore document ID as the notification ID to ensure consistency
+            final notification = UserNotification.fromJson({
+              ...data,
+              'id': doc.id, // Always use the document ID
+              'createdAt': createdAtString,
+              if (readAtString != null) 'readAt': readAtString,
+            });
+            
+            return notification;
+          } catch (e) {
+            print('❌ Error parsing notification document ${doc.id}: $e');
+            print('   Document data: ${doc.data()}');
+            return null;
+          }
+        })
+        .where((n) => n != null)
+        .cast<UserNotification>()
+        .toList();
   }
 
   /// Mark notification as read
@@ -540,11 +625,12 @@ class ScheduleService {
     try {
       await _firestore.collection('notifications').doc(notificationId).update({
         'isRead': true,
-        'readAt': DateTime.now().toIso8601String(),
+        'readAt': Timestamp.fromDate(DateTime.now()), // Use Firestore Timestamp
       });
       return true;
     } catch (e) {
       print('❌ Error marking notification as read: $e');
+      print('   Notification ID: $notificationId');
       return false;
     }
   }

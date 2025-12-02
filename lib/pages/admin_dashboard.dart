@@ -780,7 +780,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               Text(
-                '${log.adminName} - ${log.description}',
+                '${log.actorName} - ${log.description}',
                 style: GoogleFonts.poppins(fontSize: 11, color: _textSecondary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

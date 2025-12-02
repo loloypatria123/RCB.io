@@ -1,5 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../models/report_model.dart';
+import '../models/audit_log_model.dart';
+import '../services/report_service.dart';
+import '../services/audit_service.dart';
+import '../services/export_service.dart';
+import '../services/export_service_web.dart';
 
 const Color _cardBg = Color(0xFF131820);
 const Color _accentPrimary = Color(0xFF00D9FF);
@@ -39,7 +47,9 @@ class ReportData {
 }
 
 class _AdminReportsState extends State<AdminReports> {
-  final List<ReportData> reports = [];
+  List<ReportData> reports = [];
+
+  StreamSubscription<List<ReportModel>>? _reportsSub;
 
   String _selectedCategory = 'All';
   String _selectedStatus = 'All';
@@ -51,11 +61,39 @@ class _AdminReportsState extends State<AdminReports> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    _reportsSub = ReportService.streamAllReports().listen((models) {
+      setState(() {
+        reports = models
+            .where((m) => !(m.archived))
+            .map(
+              (m) => ReportData(
+                id: m.id,
+                title: m.title,
+                category: m.category,
+                status: m.status,
+                submittedBy: m.submittedBy,
+                submittedDate: m.submittedDate,
+                description: m.description,
+                resolved: m.status == 'Resolved',
+                archived: m.archived,
+                replies: m.replies,
+              ),
+            )
+            .toList();
+      });
+    });
+    
+    // Log admin access to reports
+    AuditService.logAdminAccess(
+      action: AuditAction.adminAccessedReports,
+      area: 'Reports & Feedback Management',
+    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _reportsSub?.cancel();
     super.dispose();
   }
 
@@ -546,9 +584,11 @@ class _AdminReportsState extends State<AdminReports> {
     }
   }
 
-  void _handleReportAction(String action, ReportData report) {
+  Future<void> _handleReportAction(String action, ReportData report) async {
     if (action == 'resolve') {
       setState(() => report.resolved = true);
+      await ReportService.markResolved(report.id, true);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -564,6 +604,8 @@ class _AdminReportsState extends State<AdminReports> {
       _showDetailsDialog(report);
     } else if (action == 'archive') {
       setState(() => report.archived = true);
+      await ReportService.archive(report.id);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Report archived', style: GoogleFonts.poppins()),
@@ -636,8 +678,15 @@ class _AdminReportsState extends State<AdminReports> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              final reply = replyController.text.trim();
+              if (reply.isEmpty) {
+                Navigator.pop(context);
+                return;
+              }
               Navigator.pop(context);
+              await ReportService.addReply(report.id, reply);
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -798,15 +847,7 @@ class _AdminReportsState extends State<AdminReports> {
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Reports exported as CSV',
-                    style: GoogleFonts.poppins(),
-                  ),
-                  backgroundColor: _successColor,
-                ),
-              );
+              _exportReportsToCSV();
             },
             icon: const Icon(Icons.table_chart),
             label: Text(
@@ -821,15 +862,7 @@ class _AdminReportsState extends State<AdminReports> {
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Reports exported as PDF',
-                    style: GoogleFonts.poppins(),
-                  ),
-                  backgroundColor: _successColor,
-                ),
-              );
+              _exportReportsToPDF();
             },
             icon: const Icon(Icons.picture_as_pdf),
             label: Text(
@@ -842,6 +875,148 @@ class _AdminReportsState extends State<AdminReports> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _exportReportsToCSV() {
+    try {
+      // Prepare CSV data
+      final headers = [
+        'Report ID',
+        'Title',
+        'Category',
+        'Status',
+        'Submitted By',
+        'Submitted Date',
+        'Description',
+        'Replies Count',
+        'Resolved',
+        'Archived',
+      ];
+      
+      // Build rows
+      final rows = filteredReports.map((report) {
+        return [
+          report.id,
+          report.title,
+          report.category,
+          report.status,
+          report.submittedBy,
+          report.submittedDate,
+          report.description,
+          report.replies.length.toString(),
+          report.resolved.toString(),
+          report.archived.toString(),
+        ];
+      }).toList();
+      
+      // Generate CSV content
+      final csvContent = ExportService.generateCSV(
+        headers: headers,
+        rows: rows,
+      );
+      
+      // Generate filename
+      final filename = ExportService.generateFilename('reports');
+      
+      // Calculate file size
+      final fileSize = ExportService.calculateFileSize(csvContent);
+      
+      // Download file (web-specific)
+      ExportServiceWeb.downloadCSV(csvContent, filename);
+      
+      // Log export action
+      AuditService.logDataExport(
+        dataType: 'Reports',
+        format: 'CSV',
+        recordCount: filteredReports.length,
+      );
+      
+      print('📄 CSV Downloaded: $filename');
+      print('   Records: ${filteredReports.length}');
+      print('   Size: $fileSize');
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.download_done, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'CSV Downloaded Successfully!',
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Text(
+                      '$filename (${filteredReports.length} reports, $fileSize)',
+                      style: GoogleFonts.poppins(fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: _successColor,
+          duration: const Duration(seconds: 5),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      
+    } catch (e) {
+      print('❌ Error generating CSV: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Error generating CSV: $e',
+                  style: GoogleFonts.poppins(),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: _errorColor,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    }
+  }
+
+  void _exportReportsToPDF() {
+    // PDF export placeholder - would require pdf package
+    AuditService.logDataExport(
+      dataType: 'Reports',
+      format: 'PDF',
+      recordCount: filteredReports.length,
+    );
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'PDF export coming soon! Use CSV export for now.',
+                style: GoogleFonts.poppins(),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: _accentSecondary,
+        duration: const Duration(seconds: 4),
       ),
     );
   }

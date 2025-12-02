@@ -2,57 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../constants/app_colors.dart';
 import 'sign_up_page.dart';
-
-// Professional Award-Winning Color Palette
-const Color primaryDark = Color(0xFF0A0E27); // Deep navy - sophisticated base
-const Color primaryMedium = Color(0xFF1A1F3A); // Rich navy - depth
-const Color primaryLight = Color(0xFF2D3561); // Elegant blue-grey
-const Color accentBlue = Color(0xFF4F46E5); // Modern indigo - premium feel
-const Color accentCyan = Color(0xFF06B6D4); // Professional cyan - trust
-const Color accentPurple = Color(0xFF8B5CF6); // Luxury purple - innovation
-
-// Surface & Background Colors
-const Color surfaceDark = Color(0xFF111827); // Card backgrounds - modern
-const Color surfaceLight = Color(0xFF1F2937); // Elevated surfaces
-const Color surfaceAccent = Color(0xFF374151); // Interactive elements
-
-// Text Colors - High Contrast & Accessibility
-const Color textPrimary = Color(0xFFF9FAFB); // Pure white text - clarity
-const Color textSecondary = Color(0xFFD1D5DB); // Light grey - readable
-const Color textMuted = Color(0xFF9CA3AF); // Muted grey - subtle
-const Color textAccent = Color(0xFF60A5FA); // Blue accent text - links
-
-// Status Colors - Professional & Clear
-const Color successColor = Color(0xFF10B981); // Modern green - success
-const Color warningColor = Color(0xFFF59E0B); // Amber - warnings
-const Color errorColor = Color(0xFFEF4444); // Red - errors
-
-// Premium Gradients
-const LinearGradient backgroundGradient = LinearGradient(
-  colors: [primaryDark, primaryMedium, primaryLight],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-  stops: [0.0, 0.5, 1.0],
-);
-
-const LinearGradient buttonGradient = LinearGradient(
-  colors: [accentBlue, accentCyan],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
-
-const LinearGradient cardGradient = LinearGradient(
-  colors: [surfaceDark, surfaceLight],
-  begin: Alignment.topCenter,
-  end: Alignment.bottomCenter,
-);
-
-const LinearGradient accentGradient = LinearGradient(
-  colors: [accentPurple, accentBlue],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
 
 class EmailVerificationPage extends StatefulWidget {
   final String email;
@@ -70,15 +21,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   @override
   void initState() {
     super.initState();
-    print('📧 Email verification page initialized');
-    print('📧 Email: ${widget.email}');
-    print('📧 Email length: ${widget.email.length}');
-
-    if (widget.email.isEmpty) {
-      print('❌ ERROR: Email is empty!');
-    } else {
-      print('✅ Email received correctly');
-    }
   }
 
   @override
@@ -89,17 +31,22 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
+      backgroundColor: AppColors.neutralDark,
       body: Container(
-        width: double.infinity,
-        height: MediaQuery.of(context).size.height,
-        decoration: const BoxDecoration(gradient: backgroundGradient),
+        width: size.width,
+        height: size.height,
+        decoration: const BoxDecoration(
+          gradient: AppColors.backgroundGradient,
+        ),
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               children: [
-                SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+                SizedBox(height: size.height * 0.05),
                 // Back button
                 Align(
                   alignment: Alignment.centerLeft,
@@ -118,157 +65,137 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                     },
                   ),
                 ),
-                const SizedBox(height: 12),
-                // Enhanced Logo Circle with Premium Design
+                
+                const SizedBox(height: 30),
+                
+                // Logo
                 Container(
-                  width: 140,
-                  height: 140,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: accentGradient,
+                    color: AppColors.primaryDarkBlue.withOpacity(0.3),
+                    border: Border.all(
+                      color: AppColors.primaryLightBlue.withOpacity(0.5),
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: accentBlue.withOpacity(0.3),
-                        blurRadius: 30,
-                        offset: const Offset(0, 15),
-                        spreadRadius: 5,
-                      ),
-                      BoxShadow(
-                        color: accentCyan.withOpacity(0.2),
-                        blurRadius: 60,
-                        offset: const Offset(0, 30),
-                        spreadRadius: 10,
+                        color: AppColors.primaryBlue.withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: buttonGradient,
-                    ),
-                    child: const Icon(
-                      Icons.mark_email_read_rounded,
-                      color: Colors.white,
-                      size: 50,
-                    ),
+                  child: Icon(
+                    Icons.mark_email_read_outlined,
+                    color: AppColors.accentYellow,
+                    size: 60,
                   ),
                 ),
+                
                 const SizedBox(height: 32),
-                // Title
+                
                 Text(
-                  'Verify Your Email',
-                  style: GoogleFonts.poppins(
+                  'Verify Email',
+                  style: GoogleFonts.orbitron(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
-                    color: textPrimary,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Subtitle
                 Text(
-                  'We sent a verification code to',
-                  style: GoogleFonts.poppins(
+                  'Enter the code sent to',
+                  style: GoogleFonts.roboto(
                     fontSize: 16,
-                    color: textSecondary,
+                    color: Colors.grey[400],
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   widget.email,
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.roboto(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: accentBlue,
+                    color: AppColors.primaryLightBlue,
                   ),
                 ),
-                const SizedBox(height: 40),
-                // Enhanced Verification Code Input
+                
+                const SizedBox(height: 48),
+                
+                // Code Input
                 Container(
                   decoration: BoxDecoration(
+                    color: AppColors.neutralDark,
                     borderRadius: BorderRadius.circular(16),
-                    gradient: cardGradient,
                     border: Border.all(
-                      color: primaryMedium.withOpacity(0.3),
+                      color: AppColors.primaryDarkBlue,
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: primaryDark.withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                        spreadRadius: 2,
-                      ),
-                      BoxShadow(
-                        color: accentBlue.withOpacity(0.1),
-                        blurRadius: 25,
-                        offset: const Offset(0, 15),
-                        spreadRadius: 5,
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
                   child: TextField(
                     controller: _codeController,
-                    style: GoogleFonts.poppins(
-                      color: textPrimary,
-                      fontSize: 20,
-                      letterSpacing: 3,
+                    style: GoogleFonts.roboto(
+                      color: Colors.white,
+                      fontSize: 24,
+                      letterSpacing: 8,
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,
                     maxLength: 6,
-                    cursorColor: accentBlue,
+                    cursorColor: AppColors.accentYellow,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       hintText: '000000',
-                      hintStyle: GoogleFonts.poppins(
-                        color: textMuted,
-                        fontSize: 20,
-                        letterSpacing: 3,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      prefixIcon: Container(
-                        margin: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: accentBlue,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(
-                          Icons.vpn_key_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
+                      hintStyle: GoogleFonts.roboto(
+                        color: Colors.grey[700],
+                        fontSize: 24,
+                        letterSpacing: 8,
                       ),
                       border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      focusedErrorBorder: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 20,
-                      ),
                       counterText: '',
+                      contentPadding: const EdgeInsets.symmetric(
+                        vertical: 24,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+                
+                const SizedBox(height: 40),
+                
                 // Verify Button
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, _) => Container(
                     width: double.infinity,
                     height: 56,
                     decoration: BoxDecoration(
-                      gradient: authProvider.isLoading ? null : buttonGradient,
-                      color: authProvider.isLoading ? textMuted : null,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: authProvider.isLoading
+                          ? null
+                          : const LinearGradient(
+                              colors: [
+                                AppColors.primaryBlue,
+                                AppColors.primaryDarkBlue,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      color: authProvider.isLoading ? Colors.grey[700] : null,
                       boxShadow: authProvider.isLoading
                           ? null
                           : [
                               BoxShadow(
-                                color: primaryMedium.withOpacity(0.4),
+                                color: AppColors.primaryBlue.withOpacity(0.5),
                                 blurRadius: 12,
-                                offset: const Offset(0, 6),
+                                offset: const Offset(0, 4),
                               ),
                             ],
                     ),
@@ -280,32 +207,35 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: authProvider.isLoading
                           ? const SizedBox(
-                              height: 20,
-                              width: 20,
+                              height: 24,
+                              width: 24,
                               child: CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                  AppColors.accentYellow,
                                 ),
                                 strokeWidth: 2,
                               ),
                             )
                           : Text(
-                              'Verify Email',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
+                              'VERIFY',
+                              style: GoogleFonts.orbitron(
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
+                                letterSpacing: 1.2,
                               ),
                             ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                
+                const SizedBox(height: 24),
+                
                 // Error Message
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, _) =>
@@ -313,48 +243,51 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                       ? Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: AppColors.errorColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: Colors.red.withOpacity(0.3),
+                              color: AppColors.errorColor.withOpacity(0.3),
                             ),
                           ),
                           child: Text(
                             authProvider.errorMessage!,
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.red,
+                            style: GoogleFonts.roboto(
+                              fontSize: 14,
+                              color: AppColors.errorColor,
                             ),
                           ),
                         )
                       : const SizedBox.shrink(),
                 ),
+                
                 const SizedBox(height: 32),
+                
                 // Resend Code
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       "Didn't receive the code? ",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: textSecondary,
+                      style: GoogleFonts.roboto(
+                        fontSize: 15,
+                        color: Colors.grey[400],
                       ),
                     ),
                     GestureDetector(
                       onTap: _isResending ? null : () => _resendCode(context),
                       child: Text(
                         'Resend',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
+                        style: GoogleFonts.roboto(
+                          fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: _isResending ? textMuted : accentBlue,
+                          color: _isResending ? Colors.grey[600] : AppColors.accentYellow,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -369,9 +302,9 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         SnackBar(
           content: Text(
             'Please enter the verification code',
-            style: GoogleFonts.poppins(),
+            style: GoogleFonts.roboto(),
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.warningColor,
         ),
       );
       return;
@@ -379,18 +312,14 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
     final enteredCode = _codeController.text.trim();
 
-    print('🔐 User entered code: $enteredCode');
-    print('🔐 Code length: ${enteredCode.length}');
-    print('🔐 Code type: ${enteredCode.runtimeType}');
-
     if (enteredCode.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Verification code must be 6 digits',
-            style: GoogleFonts.poppins(),
+            style: GoogleFonts.roboto(),
           ),
-          backgroundColor: Colors.orange,
+          backgroundColor: AppColors.warningColor,
         ),
       );
       return;
@@ -399,14 +328,11 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     final success = await authProvider.verifyEmail(enteredCode);
 
     if (success && mounted) {
-      // Navigate based on role
       if (authProvider.isAdmin) {
         Navigator.of(context).pushReplacementNamed('/admin-dashboard');
       } else {
         Navigator.of(context).pushReplacementNamed('/user-dashboard');
       }
-    } else if (mounted) {
-      print('❌ Verification failed');
     }
   }
 
@@ -430,10 +356,10 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Verification code resent to ${widget.email}',
-              style: GoogleFonts.poppins(),
+              'Verification code resent',
+              style: GoogleFonts.roboto(),
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.successColor,
           ),
         );
       }

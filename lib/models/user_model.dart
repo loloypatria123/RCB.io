@@ -10,6 +10,8 @@ class UserModel {
   final DateTime? verificationCodeExpiry;
   final DateTime createdAt;
   final DateTime? lastLogin;
+  final String status;
+  final int? activityCount;
 
   UserModel({
     required this.uid,
@@ -21,6 +23,8 @@ class UserModel {
     this.verificationCodeExpiry,
     required this.createdAt,
     this.lastLogin,
+    this.status = 'Active',
+    this.activityCount,
   });
 
   /// Convert UserModel to JSON for Firestore
@@ -35,6 +39,8 @@ class UserModel {
       'verificationCodeExpiry': verificationCodeExpiry?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
       'lastLogin': lastLogin?.toIso8601String(),
+      'status': status,
+      'activityCount': activityCount,
     };
   }
 
@@ -56,6 +62,10 @@ class UserModel {
       lastLogin: json['lastLogin'] != null
           ? DateTime.parse(json['lastLogin'])
           : null,
+      status: json['status'] ?? 'Active',
+      activityCount: json['activityCount'] != null
+          ? (json['activityCount'] as num).toInt()
+          : null,
     );
   }
 
@@ -70,6 +80,8 @@ class UserModel {
     DateTime? verificationCodeExpiry,
     DateTime? createdAt,
     DateTime? lastLogin,
+    String? status,
+    int? activityCount,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -82,6 +94,8 @@ class UserModel {
           verificationCodeExpiry ?? this.verificationCodeExpiry,
       createdAt: createdAt ?? this.createdAt,
       lastLogin: lastLogin ?? this.lastLogin,
+      status: status ?? this.status,
+      activityCount: activityCount ?? this.activityCount,
     );
   }
 }

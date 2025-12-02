@@ -4,10 +4,14 @@ class UIProvider extends ChangeNotifier {
   bool _rememberMe = false;
   bool _agreeToTerms = false;
   bool _obscurePassword = true;
+  bool _isDarkMode = true;
+  String _selectedLanguage = 'English';
 
   bool get rememberMe => _rememberMe;
   bool get agreeToTerms => _agreeToTerms;
   bool get obscurePassword => _obscurePassword;
+  bool get isDarkMode => _isDarkMode;
+  String get selectedLanguage => _selectedLanguage;
 
   void toggleRememberMe() {
     _rememberMe = !_rememberMe;
@@ -39,10 +43,22 @@ class UIProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setDarkMode(bool value) {
+    _isDarkMode = value;
+    notifyListeners();
+  }
+
+  void setSelectedLanguage(String value) {
+    _selectedLanguage = value;
+    notifyListeners();
+  }
+
   void reset() {
     _rememberMe = false;
     _agreeToTerms = false;
     _obscurePassword = true;
+    _isDarkMode = true;
+    _selectedLanguage = 'English';
     notifyListeners();
   }
 }

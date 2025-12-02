@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../models/user_model.dart';
+import '../services/user_management_service.dart';
 
 const Color _cardBg = Color(0xFF131820);
 const Color _accentPrimary = Color(0xFF00D9FF);
@@ -35,6 +38,8 @@ class UserData {
 class _AdminUserManagementState extends State<AdminUserManagement> {
   final List<UserData> users = [];
 
+  bool _isLoading = false;
+
   late TextEditingController _searchController;
   String _selectedFilter = 'All';
 
@@ -42,6 +47,7 @@ class _AdminUserManagementState extends State<AdminUserManagement> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    _loadUsers();
   }
 
   @override
@@ -117,6 +123,52 @@ class _AdminUserManagementState extends State<AdminUserManagement> {
         ],
       ),
     );
+  }
+
+  Future<void> _loadUsers() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final accounts = await UserManagementService.getAllAccounts();
+
+      users
+        ..clear()
+        ..addAll(
+          accounts.map(
+            (u) => UserData(
+              id: u.uid,
+              name: u.name,
+              email: u.email,
+              role: u.role == UserRole.admin ? 'Admin' : 'User',
+              status: u.status,
+              joinDate:
+                  '${u.createdAt.year}-${u.createdAt.month.toString().padLeft(2, '0')}-${u.createdAt.day.toString().padLeft(2, '0')}',
+              lastLogin: u.lastLogin != null
+                  ? '${u.lastLogin!.year}-${u.lastLogin!.month.toString().padLeft(2, '0')}-${u.lastLogin!.day.toString().padLeft(2, '0')}'
+                  : 'Never',
+              activityCount: u.activityCount ?? 0,
+            ),
+          ),
+        );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to load users: $e',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: _warningColor,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Widget _buildStatsRow() {
@@ -291,7 +343,19 @@ class _AdminUserManagementState extends State<AdminUserManagement> {
               ],
             ),
           ),
-          if (filteredUsers.isEmpty)
+          if (_isLoading)
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation(_accentPrimary),
+                ),
+              ),
+            )
+          else if (filteredUsers.isEmpty)
             Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
@@ -375,7 +439,59 @@ class _AdminUserManagementState extends State<AdminUserManagement> {
           ),
           Expanded(
             flex: 1,
-            child: Icon(Icons.more_vert, color: _accentPrimary, size: 18),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: PopupMenuButton<String>(
+                onSelected: (value) => _handleUserAction(value, user),
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: user.status == 'Active'
+                        ? 'set_inactive'
+                        : 'set_active',
+                    child: Row(
+                      children: [
+                        Icon(
+                          user.status == 'Active'
+                              ? Icons.block
+                              : Icons.check_circle,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          user.status == 'Active'
+                              ? 'Set Inactive'
+                              : 'Set Active',
+                          style: GoogleFonts.poppins(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: user.role == 'Admin' ? 'make_user' : 'make_admin',
+                    child: Row(
+                      children: [
+                        Icon(
+                          user.role == 'Admin'
+                              ? Icons.person
+                              : Icons.admin_panel_settings,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          user.role == 'Admin'
+                              ? 'Demote to User'
+                              : 'Promote to Admin',
+                          style: GoogleFonts.poppins(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                color: _cardBg,
+                icon: Icon(Icons.more_vert, color: _accentPrimary, size: 18),
+              ),
+            ),
           ),
         ],
       ),
@@ -428,5 +544,97 @@ class _AdminUserManagementState extends State<AdminUserManagement> {
         ],
       ),
     );
+  }
+
+  Future<void> _handleUserAction(String action, UserData user) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Current admin not authenticated',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: _warningColor,
+        ),
+      );
+      return;
+    }
+
+    final adminId = currentUser.uid;
+    final adminEmail = currentUser.email ?? 'unknown@email.com';
+    final adminName = currentUser.displayName ?? 'Admin User';
+
+    if (action == 'set_active' || action == 'set_inactive') {
+      final newStatus = action == 'set_active' ? 'Active' : 'Inactive';
+
+      final success = await UserManagementService.updateUserStatus(
+        targetUserId: user.id,
+        isAdmin: user.role == 'Admin',
+        newStatus: newStatus,
+        adminId: adminId,
+        adminEmail: adminEmail,
+        adminName: adminName,
+      );
+
+      if (success) {
+        await _loadUsers();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'User status updated to $newStatus',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: _successColor,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to update user status',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: _warningColor,
+          ),
+        );
+      }
+    } else if (action == 'make_admin' || action == 'make_user') {
+      final makeAdmin = action == 'make_admin';
+
+      final success = await UserManagementService.updateUserRole(
+        targetUserId: user.id,
+        currentIsAdmin: user.role == 'Admin',
+        makeAdmin: makeAdmin,
+        adminId: adminId,
+        adminEmail: adminEmail,
+        adminName: adminName,
+      );
+
+      if (success) {
+        await _loadUsers();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              makeAdmin
+                  ? 'User promoted to admin successfully'
+                  : 'Admin demoted to user successfully',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: _successColor,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to update user role',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: _warningColor,
+          ),
+        );
+      }
+    }
   }
 }

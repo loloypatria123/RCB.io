@@ -26,7 +26,6 @@ class _AdminScheduleCreationDialogState
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _notesController = TextEditingController();
-  final _assignedUserController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
@@ -38,7 +37,6 @@ class _AdminScheduleCreationDialogState
     _titleController.dispose();
     _descriptionController.dispose();
     _notesController.dispose();
-    _assignedUserController.dispose();
     super.dispose();
   }
 
@@ -121,20 +119,8 @@ class _AdminScheduleCreationDialogState
                 ),
                 const SizedBox(height: 16),
 
-                // Assigned User and Duration Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildFormField(
-                        label: 'Assigned User ID',
-                        controller: _assignedUserController,
-                        hint: 'Optional user ID',
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(child: _buildDurationField()),
-                  ],
-                ),
+                // Duration
+                _buildDurationField(),
                 const SizedBox(height: 16),
 
                 // Notes
@@ -486,9 +472,6 @@ class _AdminScheduleCreationDialogState
         description: _descriptionController.text.trim(),
         scheduledDate: _selectedDate,
         scheduledTime: scheduledDateTime,
-        assignedUserId: _assignedUserController.text.trim().isNotEmpty
-            ? _assignedUserController.text.trim()
-            : null,
         notes: _notesController.text.trim().isNotEmpty
             ? _notesController.text.trim()
             : null,

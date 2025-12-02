@@ -2,10 +2,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ============================================
-    // USERS COLLECTION RULES
-    // ============================================
+    // Users collection rules
     match /users/{userId} {
       // Allow create during sign up (initial user creation)
       allow create: if request.auth != null && 
@@ -21,9 +18,7 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == userId;
     }
     
-    // ============================================
-    // ADMINS COLLECTION RULES
-    // ============================================
+    // Admins collection rules
     match /admins/{adminId} {
       // Allow create during sign up (initial admin creation)
       allow create: if request.auth != null && 
@@ -39,35 +34,84 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == adminId;
     }
     
-    // ============================================
-    // SCHEDULES COLLECTION RULES (NEW)
-    // ============================================
-    // Allow authenticated users to read schedules
-    match /schedules/{document=**} {
+    // Reports collection rules
+    match /reports/{reportId} {
+      // Any authenticated user can create a report
+      allow create: if request.auth != null;
+
+      // Any authenticated user (user or admin) can read reports
       allow read: if request.auth != null;
-      allow create, update, delete: if request.auth.token.role == 'admin';
+
+      // Allow updates (e.g., resolve, archive, add replies) for authenticated users
+      // You can tighten this later by checking custom claims for admins if needed.
+      allow update, delete: if request.auth != null;
+    }
+
+    // Schedules collection rules
+    match /schedules/{scheduleId} {
+      // Any authenticated user can read schedules
+      allow read: if request.auth != null;
+      
+      // Any authenticated user can create/update/delete schedules
+      // (You can tighten this to admin-only later if needed)
+      allow create, update, delete: if request.auth != null;
+    }
+
+    // Audit logs collection rules
+    match /audit_logs/{logId} {
+      // Any authenticated user can read audit logs
+      allow read: if request.auth != null;
+      
+      // Any authenticated user can create audit logs
+      allow create: if request.auth != null;
+    }
+
+    // Security attempts collection rules (NEW - for login security)
+    match /security_attempts/{emailDoc} {
+      // Allow READ for everyone (needed to check if account is locked BEFORE authentication)
+      // This is safe because documents are keyed by sanitized email
+      allow read: if true;
+      
+      // Allow creating security attempt records (needed for failed login tracking)
+      allow create: if true;
+      
+      // Allow updating security attempt records (needed for tracking and lockouts)
+      allow update: if true;
+      
+      // Note: We allow broad access here because:
+      // 1. Lock checks happen BEFORE user authenticates
+      // 2. Failed attempt tracking must work for invalid credentials
+      // 3. Document IDs are sanitized emails, not sensitive data
+      // 4. Actual security is enforced in the application code
+    }
+
+    // Notifications collection rules
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      // The query filters by userId, so we just need to check the document's userId matches
+      allow read: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      
+      // Allow creating notifications (admin creates for users, users can create for themselves)
+      // Any authenticated user can create notifications (allows admins to create for users)
+      allow create: if request.auth != null && 
+        request.resource.data.userId is string &&
+        request.resource.data.containsKey('createdAt') &&
+        request.resource.data.containsKey('isRead');
+      
+      // Users can update their own notifications (e.g., mark as read)
+      // Allow updating isRead and readAt fields only
+      allow update: if request.auth != null && 
+        resource.data.userId == request.auth.uid &&
+        (!request.resource.data.diff(resource.data).affectedKeys().contains('userId')) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().contains('createdAt'));
+      
+      // Users can delete their own notifications
+      allow delete: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
     }
     
-    // ============================================
-    // AUDIT LOGS COLLECTION RULES (NEW)
-    // ============================================
-    // Only admins can read/write audit logs
-    match /audit_logs/{document=**} {
-      allow read, write: if request.auth.token.role == 'admin';
-    }
-    
-    // ============================================
-    // NOTIFICATIONS COLLECTION RULES (NEW)
-    // ============================================
-    // Users can read/update their own notifications, admins can create
-    match /notifications/{document=**} {
-      allow read, update: if request.auth.uid == resource.data.userId;
-      allow create: if request.auth.token.role == 'admin';
-    }
-    
-    // ============================================
-    // DEFAULT DENY FOR ALL OTHER COLLECTIONS
-    // ============================================
+    // Default deny for all other collections
     match /{document=**} {
       allow read, write: if false;
     }

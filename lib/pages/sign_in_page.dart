@@ -4,57 +4,8 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/ui_provider.dart';
 import '../widgets/animated_robot_logo.dart';
+import '../constants/app_colors.dart';
 import 'sign_up_page.dart';
-
-// Professional Award-Winning Color Palette
-const Color primaryDark = Color(0xFF0A0E27); // Deep navy - sophisticated base
-const Color primaryMedium = Color(0xFF1A1F3A); // Rich navy - depth
-const Color primaryLight = Color(0xFF2D3561); // Elegant blue-grey
-const Color accentBlue = Color(0xFF4F46E5); // Modern indigo - premium feel
-const Color accentCyan = Color(0xFF06B6D4); // Professional cyan - trust
-const Color accentPurple = Color(0xFF8B5CF6); // Luxury purple - innovation
-
-// Surface & Background Colors
-const Color surfaceDark = Color(0xFF111827); // Card backgrounds - modern
-const Color surfaceLight = Color(0xFF1F2937); // Elevated surfaces
-const Color surfaceAccent = Color(0xFF374151); // Interactive elements
-
-// Text Colors - High Contrast & Accessibility
-const Color textPrimary = Color(0xFFF9FAFB); // Pure white text - clarity
-const Color textSecondary = Color(0xFFD1D5DB); // Light grey - readable
-const Color textMuted = Color(0xFF9CA3AF); // Muted grey - subtle
-const Color textAccent = Color(0xFF60A5FA); // Blue accent text - links
-
-// Status Colors - Professional & Clear
-const Color successColor = Color(0xFF10B981); // Modern green - success
-const Color warningColor = Color(0xFFF59E0B); // Amber - warnings
-const Color errorColor = Color(0xFFEF4444); // Red - errors
-
-// Premium Gradients
-const LinearGradient backgroundGradient = LinearGradient(
-  colors: [primaryDark, primaryMedium, primaryLight],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-  stops: [0.0, 0.5, 1.0],
-);
-
-const LinearGradient buttonGradient = LinearGradient(
-  colors: [accentBlue, accentCyan],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
-
-const LinearGradient cardGradient = LinearGradient(
-  colors: [surfaceDark, surfaceLight],
-  begin: Alignment.topCenter,
-  end: Alignment.bottomCenter,
-);
-
-const LinearGradient accentGradient = LinearGradient(
-  colors: [accentPurple, accentBlue],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -76,71 +27,81 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
+      backgroundColor: AppColors.neutralDark,
       body: Container(
-        decoration: const BoxDecoration(gradient: backgroundGradient),
+        height: size.height,
+        width: size.width,
+        decoration: const BoxDecoration(
+          gradient: AppColors.backgroundGradient,
+        ),
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(height: MediaQuery.of(context).size.height * 0.08),
-                // Enhanced Animated Robot Logo with Premium Container
+                SizedBox(height: size.height * 0.1),
+                // Robot Logo Area
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: accentGradient,
+                    color: AppColors.primaryDarkBlue.withOpacity(0.3),
+                    border: Border.all(
+                      color: AppColors.primaryLightBlue.withOpacity(0.5),
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: accentBlue.withOpacity(0.3),
-                        blurRadius: 30,
-                        offset: const Offset(0, 15),
-                        spreadRadius: 5,
-                      ),
-                      BoxShadow(
-                        color: accentCyan.withOpacity(0.2),
-                        blurRadius: 60,
-                        offset: const Offset(0, 30),
-                        spreadRadius: 10,
+                        color: AppColors.primaryBlue.withOpacity(0.3),
+                        blurRadius: 20,
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
                   child: const AnimatedRobotLogo(
-                    size: 100,
+                    size: 80,
                     enableCursorTracking: true,
                   ),
                 ),
-                SizedBox(height: 32),
-                // Welcome Text
+                const SizedBox(height: 32),
+                
+                // Title
                 Text(
                   'Welcome Back',
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
+                  style: GoogleFonts.orbitron(
+                    fontSize: 32,
                     fontWeight: FontWeight.w700,
-                    color: textPrimary,
+                    color: Colors.white,
+                    letterSpacing: 1.5,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to continue',
-                  style: GoogleFonts.poppins(
+                  'Sign in to access your robot controls',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.roboto(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    color: textSecondary,
+                    color: Colors.grey[400],
                   ),
                 ),
-                const SizedBox(height: 40),
-                // Email Field
+                const SizedBox(height: 48),
+
+                // Form Fields
                 _buildTextField(
                   controller: _emailController,
-                  hint: 'Enter your email',
+                  hint: 'Email Address',
                   icon: Icons.email_outlined,
                 ),
-                const SizedBox(height: 16),
-                // Password Field
+                const SizedBox(height: 20),
                 _buildPasswordField(),
-                const SizedBox(height: 16),
+                
+                const SizedBox(height: 24),
+
                 // Remember Me & Forgot Password
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -148,21 +109,32 @@ class _SignInPageState extends State<SignInPage> {
                     Row(
                       children: [
                         Consumer<UIProvider>(
-                          builder: (context, uiProvider, _) => Checkbox(
-                            value: uiProvider.rememberMe,
-                            onChanged: (value) {
-                              uiProvider.setRememberMe(value ?? false);
-                            },
-                            activeColor: accentBlue,
-                            checkColor: Colors.white,
-                            side: BorderSide(color: accentBlue, width: 2),
+                          builder: (context, uiProvider, _) => SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: Checkbox(
+                              value: uiProvider.rememberMe,
+                              onChanged: (value) {
+                                uiProvider.setRememberMe(value ?? false);
+                              },
+                              activeColor: AppColors.accentYellow,
+                              checkColor: AppColors.neutralDark,
+                              side: BorderSide(
+                                color: Colors.grey[500]!,
+                                width: 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Text(
                           'Remember Me',
-                          style: GoogleFonts.poppins(
+                          style: GoogleFonts.roboto(
                             fontSize: 14,
-                            color: textSecondary,
+                            color: Colors.grey[300],
                           ),
                         ),
                       ],
@@ -170,19 +142,22 @@ class _SignInPageState extends State<SignInPage> {
                     GestureDetector(
                       onTap: () {
                         // Handle forgot password
+                        _showComingSoonDialog('Forgot Password');
                       },
                       child: Text(
                         'Forgot Password?',
-                        style: GoogleFonts.poppins(
+                        style: GoogleFonts.roboto(
                           fontSize: 14,
-                          color: accentBlue,
-                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryLightBlue,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 32),
+
+                const SizedBox(height: 40),
+
                 // Sign In Button
                 Consumer<UIProvider>(
                   builder: (context, uiProvider, _) => Consumer<AuthProvider>(
@@ -190,18 +165,25 @@ class _SignInPageState extends State<SignInPage> {
                       width: double.infinity,
                       height: 56,
                       decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
                         gradient: authProvider.isLoading
                             ? null
-                            : buttonGradient,
-                        color: authProvider.isLoading ? textMuted : null,
-                        borderRadius: BorderRadius.circular(16),
+                            : const LinearGradient(
+                                colors: [
+                                  AppColors.primaryBlue,
+                                  AppColors.primaryDarkBlue,
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                        color: authProvider.isLoading ? Colors.grey[700] : null,
                         boxShadow: authProvider.isLoading
                             ? null
                             : [
                                 BoxShadow(
-                                  color: primaryMedium.withOpacity(0.4),
+                                  color: AppColors.primaryBlue.withOpacity(0.5),
                                   blurRadius: 12,
-                                  offset: const Offset(0, 6),
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                       ),
@@ -213,42 +195,45 @@ class _SignInPageState extends State<SignInPage> {
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                         child: authProvider.isLoading
                             ? const SizedBox(
-                                height: 20,
-                                width: 20,
+                                height: 24,
+                                width: 24,
                                 child: CircularProgressIndicator(
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
+                                    AppColors.accentYellow,
                                   ),
                                   strokeWidth: 2,
                                 ),
                               )
                             : Text(
-                                'Sign In',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
+                                'SIGN IN',
+                                style: GoogleFonts.orbitron(
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.white,
+                                  letterSpacing: 1.2,
                                 ),
                               ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+
+                const SizedBox(height: 24),
+
                 // Sign Up Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       "Don't have an account? ",
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        color: textSecondary,
+                      style: GoogleFonts.roboto(
+                        fontSize: 15,
+                        color: Colors.grey[400],
                       ),
                     ),
                     GestureDetector(
@@ -261,107 +246,56 @@ class _SignInPageState extends State<SignInPage> {
                       },
                       child: Text(
                         'Sign Up',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: accentBlue,
+                        style: GoogleFonts.roboto(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.accentYellow,
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 32),
-                // Divider
+                
+                const SizedBox(height: 40),
+                
+                // Social Login
                 Row(
                   children: [
                     Expanded(
                       child: Container(
                         height: 1,
-                        color: primaryMedium.withOpacity(0.3),
+                        color: Colors.grey[800],
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        'Or continue with',
-                        style: GoogleFonts.poppins(
+                        'OR CONNECT WITH',
+                        style: GoogleFonts.orbitron(
                           fontSize: 12,
-                          color: textMuted,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
                     Expanded(
                       child: Container(
                         height: 1,
-                        color: primaryMedium.withOpacity(0.3),
+                        color: Colors.grey[800],
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 24),
-                // Social Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildSocialButton(
-                        icon: Icons.g_mobiledata,
-                        label: 'Google',
-                        onTap: () {
-                          _showComingSoonDialog('Google Sign In');
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildSocialButton(
-                        icon: Icons.facebook,
-                        label: 'Facebook',
-                        onTap: () {
-                          _showComingSoonDialog('Facebook Sign In');
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                // Footer Links
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        // Handle terms of service
-                      },
-                      child: Text(
-                        'Terms of Service',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: textMuted,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      ' • ',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: textMuted,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        // Handle privacy policy
-                      },
-                      child: Text(
-                        'Privacy Policy',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: textMuted,
-                        ),
-                      ),
-                    ),
+                    _buildSocialButton(Icons.g_mobiledata, () => _showComingSoonDialog('Google Sign In')),
+                    const SizedBox(width: 20),
+                    _buildSocialButton(Icons.facebook, () => _showComingSoonDialog('Facebook Sign In')),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: size.height * 0.05),
               ],
             ),
           ),
@@ -377,54 +311,37 @@ class _SignInPageState extends State<SignInPage> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: cardGradient,
-        border: Border.all(color: primaryMedium.withOpacity(0.3), width: 1.5),
+        color: AppColors.neutralDark,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primaryDarkBlue,
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: primaryDark.withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-            spreadRadius: 2,
-          ),
-          BoxShadow(
-            color: accentBlue.withOpacity(0.1),
-            blurRadius: 25,
-            offset: const Offset(0, 15),
-            spreadRadius: 5,
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: TextField(
         controller: controller,
-        style: GoogleFonts.poppins(
-          color: textPrimary,
+        style: GoogleFonts.roboto(
+          color: Colors.white,
           fontSize: 16,
-          fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.poppins(
-            color: textMuted,
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
+          hintStyle: GoogleFonts.roboto(
+            color: Colors.grey[600],
+            fontSize: 15,
           ),
-          prefixIcon: Container(
-            margin: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: accentBlue,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: Colors.white, size: 20),
-          ),
+          prefixIcon: Icon(icon, color: AppColors.primaryLightBlue),
           border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          focusedErrorBorder: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 20,
-            vertical: 20,
+            vertical: 16,
           ),
         ),
       ),
@@ -435,78 +352,50 @@ class _SignInPageState extends State<SignInPage> {
     return Consumer<UIProvider>(
       builder: (context, uiProvider, _) => Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: cardGradient,
-          border: Border.all(color: primaryMedium.withOpacity(0.3), width: 1.5),
+          color: AppColors.neutralDark,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.primaryDarkBlue,
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: primaryDark.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-              spreadRadius: 2,
-            ),
-            BoxShadow(
-              color: accentBlue.withOpacity(0.1),
-              blurRadius: 25,
-              offset: const Offset(0, 15),
-              spreadRadius: 5,
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: TextField(
           controller: _passwordController,
           obscureText: uiProvider.obscurePassword,
-          style: GoogleFonts.poppins(
-            color: textPrimary,
+          style: GoogleFonts.roboto(
+            color: Colors.white,
             fontSize: 16,
-            fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
-            hintText: 'Enter your password',
-            hintStyle: GoogleFonts.poppins(
-              color: textMuted,
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
+            hintText: 'Password',
+            hintStyle: GoogleFonts.roboto(
+              color: Colors.grey[600],
+              fontSize: 15,
             ),
-            prefixIcon: Container(
-              margin: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: accentBlue,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.lock_outline,
-                color: Colors.white,
-                size: 20,
-              ),
+            prefixIcon: const Icon(
+              Icons.lock_outline_rounded, 
+              color: AppColors.primaryLightBlue
             ),
-            suffixIcon: GestureDetector(
-              onTap: () {
-                uiProvider.toggleObscurePassword();
-              },
-              child: Container(
-                margin: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: accentBlue,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  uiProvider.obscurePassword
-                      ? Icons.visibility_off
-                      : Icons.visibility,
-                  color: Colors.white,
-                  size: 20,
-                ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                uiProvider.obscurePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
+                color: Colors.grey[600],
               ),
+              onPressed: () => uiProvider.toggleObscurePassword(),
             ),
             border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            errorBorder: InputBorder.none,
-            focusedErrorBorder: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
-              vertical: 20,
+              vertical: 16,
             ),
           ),
         ),
@@ -514,41 +403,27 @@ class _SignInPageState extends State<SignInPage> {
     );
   }
 
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildSocialButton(IconData icon, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 56,
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: surfaceDark.withOpacity(0.6),
-          border: Border.all(color: primaryMedium.withOpacity(0.3), width: 1.5),
+          shape: BoxShape.circle,
+          color: AppColors.neutralDark,
+          border: Border.all(color: AppColors.primaryDarkBlue),
           boxShadow: [
             BoxShadow(
-              color: primaryDark.withOpacity(0.1),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: accentBlue, size: 22),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: textSecondary,
-              ),
-            ),
-          ],
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 28,
         ),
       ),
     );
@@ -558,23 +433,29 @@ class _SignInPageState extends State<SignInPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: surfaceDark,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: AppColors.neutralDark,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.primaryDarkBlue),
+        ),
         title: Text(
           feature,
-          style: GoogleFonts.poppins(
-            color: textPrimary,
-            fontWeight: FontWeight.w600,
+          style: GoogleFonts.orbitron(
+            color: AppColors.accentYellow,
+            fontWeight: FontWeight.bold,
           ),
         ),
         content: Text(
-          'Coming Soon!',
-          style: GoogleFonts.poppins(color: textSecondary),
+          'This feature is coming soon!',
+          style: GoogleFonts.roboto(color: Colors.grey[300]),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK', style: GoogleFonts.poppins(color: accentBlue)),
+            child: Text(
+              'OK', 
+              style: TextStyle(color: AppColors.primaryLightBlue),
+            ),
           ),
         ],
       ),
@@ -587,8 +468,9 @@ class _SignInPageState extends State<SignInPage> {
         SnackBar(
           content: Text(
             'Please fill in all fields',
-            style: GoogleFonts.poppins(),
+            style: GoogleFonts.roboto(),
           ),
+          backgroundColor: AppColors.errorColor,
         ),
       );
       return;
@@ -601,27 +483,30 @@ class _SignInPageState extends State<SignInPage> {
       password: _passwordController.text,
     );
 
-    print('✅ Sign in result: $success');
-    print('👤 User role: ${authProvider.userRole}');
-    print('👤 Is admin: ${authProvider.isAdmin}');
-    print('👤 User model: ${authProvider.userModel}');
-
     if (success && mounted) {
       // Add delay to ensure user model is fully loaded from Firestore
       await Future.delayed(const Duration(milliseconds: 1000));
-
-      print('🔄 Checking role for navigation...');
-      print('👤 Final user role: ${authProvider.userRole}');
-      print('👤 Final is admin: ${authProvider.isAdmin}');
-      print('👤 Final user model: ${authProvider.userModel}');
+      
+      final userStatus = authProvider.userModel?.status ?? 'Active';
+      if (authProvider.userModel != null && userStatus != 'Active') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Your account is inactive. Please contact the administrator.',
+              style: GoogleFonts.roboto(),
+            ),
+            backgroundColor: AppColors.warningColor,
+          ),
+        );
+        await authProvider.signOut();
+        return;
+      }
 
       // Check if admin account but no Firestore document (missing admin collection)
       if (authProvider.user != null &&
           authProvider.userModel == null &&
           _emailController.text.toLowerCase().contains('admin')) {
-        print('⚠️ Admin account detected but Firestore document missing!');
-        print('🔄 Showing admin recovery page...');
-
+        
         if (mounted) {
           Navigator.of(context).pushReplacementNamed(
             '/admin-recovery',
@@ -636,10 +521,8 @@ class _SignInPageState extends State<SignInPage> {
 
       // Navigate based on role
       if (authProvider.isAdmin) {
-        print('🚀 Navigating to admin dashboard');
         Navigator.of(context).pushReplacementNamed('/admin-dashboard');
       } else {
-        print('🚀 Navigating to user dashboard');
         Navigator.of(context).pushReplacementNamed('/user-dashboard');
       }
     } else if (mounted) {
@@ -647,8 +530,9 @@ class _SignInPageState extends State<SignInPage> {
         SnackBar(
           content: Text(
             authProvider.errorMessage ?? 'Sign in failed',
-            style: GoogleFonts.poppins(),
+            style: GoogleFonts.roboto(),
           ),
+          backgroundColor: AppColors.errorColor,
         ),
       );
     }

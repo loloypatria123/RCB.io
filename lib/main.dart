@@ -41,32 +41,42 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => UIProvider()),
       ],
-      child: MaterialApp(
-        title: 'RoboCleanerBuddy',
-        theme: ThemeData(useMaterial3: true, brightness: Brightness.dark),
-        home: const SignInPage(),
-        debugShowCheckedModeBanner: false,
-        routes: {
-          '/sign-in': (context) => const SignInPage(),
-          '/sign-up': (context) => const SignUpPage(),
-          '/email-verification': (context) {
-            final email = ModalRoute.of(context)?.settings.arguments as String?;
-            return EmailVerificationPage(email: email ?? '');
-          },
-          '/admin-dashboard': (context) => _getAdminDashboard(),
-          '/admin-panel': (context) => _getAdminDashboard(),
-          '/user-dashboard': (context) => const UserDashboard(),
-          '/firestore-debug': (context) => const FirestoreDebugPage(),
-          '/admin-recovery': (context) {
-            final args =
-                ModalRoute.of(context)?.settings.arguments
-                    as Map<String, dynamic>?;
-            return AdminRecoveryPage(
-              uid: args?['uid'] ?? '',
-              email: args?['email'] ?? '',
-            );
-          },
-          '/UserSettingsPage': (context) => const UserSettingsPage(),
+      child: Consumer<UIProvider>(
+        builder: (context, uiProvider, _) {
+          return MaterialApp(
+            title: 'RoboCleanerBuddy',
+            theme: ThemeData(useMaterial3: true, brightness: Brightness.light),
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              brightness: Brightness.dark,
+            ),
+            themeMode: uiProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            home: const SignInPage(),
+            debugShowCheckedModeBanner: false,
+            routes: {
+              '/sign-in': (context) => const SignInPage(),
+              '/sign-up': (context) => const SignUpPage(),
+              '/email-verification': (context) {
+                final email =
+                    ModalRoute.of(context)?.settings.arguments as String?;
+                return EmailVerificationPage(email: email ?? '');
+              },
+              '/admin-dashboard': (context) => _getAdminDashboard(),
+              '/admin-panel': (context) => _getAdminDashboard(),
+              '/user-dashboard': (context) => const UserDashboard(),
+              '/firestore-debug': (context) => const FirestoreDebugPage(),
+              '/admin-recovery': (context) {
+                final args =
+                    ModalRoute.of(context)?.settings.arguments
+                        as Map<String, dynamic>?;
+                return AdminRecoveryPage(
+                  uid: args?['uid'] ?? '',
+                  email: args?['email'] ?? '',
+                );
+              },
+              '/UserSettingsPage': (context) => const UserSettingsPage(),
+            },
+          );
         },
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'admin_schedule_creation_dialog.dart';
 
 const Color _cardBg = Color(0xFF131820);
 const Color _accentPrimary = Color(0xFF00D9FF);
@@ -81,12 +82,11 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          _buildStatsRow(),
-          const SizedBox(height: 24),
-          _buildSchedulesList(),
-          const SizedBox(height: 24),
-          _buildUpcomingTimeline(),
+          const SizedBox(height: 16),
+          Text(
+            'Create and manage cleaning schedules for your robots.',
+            style: GoogleFonts.poppins(fontSize: 14, color: _textSecondary),
+          ),
         ],
       ),
     );
@@ -604,66 +604,9 @@ class _AdminScheduleManagementState extends State<AdminScheduleManagement> {
   }
 
   void _showAddScheduleDialog() {
-    _selectedDate = null;
-    _selectedStartTime = null;
-    _selectedEndTime = null;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: _cardBg,
-        title: Text(
-          'Create New Schedule',
-          style: GoogleFonts.poppins(
-            color: _textPrimary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildTextField('Schedule Name'),
-              const SizedBox(height: 12),
-              _buildTextField('Area/Room'),
-              const SizedBox(height: 12),
-              _buildDatePickerField(),
-              const SizedBox(height: 12),
-              _buildTimeRangeRow(),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.poppins(color: _textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Schedule created',
-                    style: GoogleFonts.poppins(),
-                  ),
-                  backgroundColor: _successColor,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _accentPrimary,
-              foregroundColor: Colors.black,
-            ),
-            child: Text(
-              'Create',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
+      builder: (context) => const AdminScheduleCreationDialog(),
     );
   }
 

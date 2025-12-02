@@ -3,8 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/report_service.dart';
+<<<<<<< HEAD
 import '../services/schedule_service.dart';
 import '../models/notification_model.dart';
+=======
+import '../models/report_model.dart';
+>>>>>>> a38c3f0e6598ba35966a66d5cde632fab570ef3d
 
 // Professional palette aligned with sign-in / sign-up pages
 const Color _primaryDark = Color(0xFF0A0E27); // Scaffold background
@@ -3660,6 +3664,7 @@ class _UserDashboardState extends State<UserDashboard> with TickerProviderStateM
   }
 
   Widget _buildIssueReportingPage() {
+<<<<<<< HEAD
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -4574,6 +4579,15 @@ class _UserDashboardState extends State<UserDashboard> with TickerProviderStateM
       ),
     );
   }
+=======
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return _ReportIssueForm(authProvider: authProvider);
+      },
+    );
+  }
+
+>>>>>>> a38c3f0e6598ba35966a66d5cde632fab570ef3d
 
   Widget _buildProfilePage() {
     return Consumer<AuthProvider>(
@@ -6308,6 +6322,343 @@ class _UserDashboardState extends State<UserDashboard> with TickerProviderStateM
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Simplified Report Issue Form Widget
+class _ReportIssueForm extends StatefulWidget {
+  final AuthProvider authProvider;
+
+  const _ReportIssueForm({required this.authProvider});
+
+  @override
+  State<_ReportIssueForm> createState() => _ReportIssueFormState();
+}
+
+class _ReportIssueFormState extends State<_ReportIssueForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  ReportCategory? _selectedCategory;
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitReport() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please select a category',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: _errorColor,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final user = widget.authProvider.user;
+    final userModel = widget.authProvider.userModel;
+
+    if (user == null || userModel == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please log in to submit a report',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: _errorColor,
+        ),
+      );
+      setState(() => _isSubmitting = false);
+      return;
+    }
+
+    final reportId = await ReportService.createReport(
+      userId: user.uid,
+      userEmail: user.email ?? userModel.email,
+      userName: userModel.name,
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      category: _selectedCategory!,
+    );
+
+    setState(() => _isSubmitting = false);
+
+    if (reportId != null) {
+      _titleController.clear();
+      _descriptionController.clear();
+      setState(() => _selectedCategory = null);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Report submitted successfully! Our team will review it.',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: _successColor,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to submit report. Please try again.',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: _errorColor,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Report Issue',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Help us improve by reporting any issues you encounter',
+              style: GoogleFonts.poppins(fontSize: 11, color: _textSecondary),
+            ),
+            const SizedBox(height: 24),
+            // Category Dropdown
+            Text(
+              'Category',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: _cardBg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _accentPrimary.withOpacity(0.2)),
+              ),
+              child: DropdownButtonFormField<ReportCategory>(
+                value: _selectedCategory,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Select issue category',
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: _textSecondary,
+                  ),
+                ),
+                dropdownColor: _cardBg,
+                style: GoogleFonts.poppins(fontSize: 11, color: _textPrimary),
+                items: ReportCategory.values.map((category) {
+                  String label;
+                  switch (category) {
+                    case ReportCategory.robotStuck:
+                      label = 'Robot Stuck';
+                      break;
+                    case ReportCategory.navigationProblem:
+                      label = 'Navigation Problem';
+                      break;
+                    case ReportCategory.cleaningError:
+                      label = 'Cleaning Error';
+                      break;
+                    case ReportCategory.appIssue:
+                      label = 'App Issue';
+                      break;
+                    case ReportCategory.batteryIssue:
+                      label = 'Battery Issue';
+                      break;
+                    case ReportCategory.sensorError:
+                      label = 'Sensor Error';
+                      break;
+                    case ReportCategory.other:
+                      label = 'Other';
+                      break;
+                  }
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Text(label),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() => _selectedCategory = value);
+                },
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a category';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Title Field
+            Text(
+              'Title',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _titleController,
+              style: GoogleFonts.poppins(fontSize: 11, color: _textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Brief title for your issue',
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: _textSecondary,
+                ),
+                filled: true,
+                fillColor: _cardBg,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: _accentPrimary.withOpacity(0.2),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: _accentPrimary.withOpacity(0.2),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: _accentPrimary),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a title';
+                }
+                if (value.trim().length < 5) {
+                  return 'Title must be at least 5 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            // Description Field
+            Text(
+              'Description',
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _descriptionController,
+              maxLines: 5,
+              style: GoogleFonts.poppins(fontSize: 11, color: _textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Describe the issue in detail...',
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: _textSecondary,
+                ),
+                filled: true,
+                fillColor: _cardBg,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: _accentPrimary.withOpacity(0.2),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: _accentPrimary.withOpacity(0.2),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: _accentPrimary),
+                ),
+                contentPadding: const EdgeInsets.all(12),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a description';
+                }
+                if (value.trim().length < 10) {
+                  return 'Description must be at least 10 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isSubmitting ? null : _submitReport,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accentPrimary,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: _isSubmitting
+                    ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                        ),
+                      )
+                    : Text(
+                        'Submit Report',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

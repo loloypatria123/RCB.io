@@ -34,6 +34,7 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == adminId;
     }
     
+<<<<<<< HEAD
     // Reports collection rules
     match /reports/{reportId} {
       // Any authenticated user can create a report
@@ -112,6 +113,34 @@ service cloud.firestore {
     }
     
     // Default deny for all other collections
+=======
+    // ============================================
+    // REPORTS COLLECTION RULES
+    // ============================================
+    match /reports/{reportId} {
+      // Users can create reports with their own userId
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+      
+      // Users can read their own reports, admins can read all reports
+      allow read: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        request.auth.token.role == 'admin'
+      );
+      
+      // Only admins can update reports (to change status, add replies, archive, etc.)
+      allow update: if request.auth != null && 
+        request.auth.token.role == 'admin';
+      
+      // Only admins can delete reports
+      allow delete: if request.auth != null && 
+        request.auth.token.role == 'admin';
+    }
+    
+    // ============================================
+    // DEFAULT DENY FOR ALL OTHER COLLECTIONS
+    // ============================================
+>>>>>>> a38c3f0e6598ba35966a66d5cde632fab570ef3d
     match /{document=**} {
       allow read, write: if false;
     }
